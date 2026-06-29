@@ -1,0 +1,33 @@
+# Normalize line endings to LF across platforms.
+* text=auto eol=lf
+
+# Explicit text files
+*.md          text eol=lf
+*.txt         text eol=lf
+*.json        text eol=lf
+*.yml         text eol=lf
+*.yaml        text eol=lf
+*.toml        text eol=lf
+*.js          text eol=lf
+*.ts          text eol=lf
+*.tsx         text eol=lf
+*.jsx         text eol=lf
+*.css         text eol=lf
+*.html        text eol=lf
+*.sh          text eol=lf
+
+# Binary assets
+*.png         binary
+*.jpg         binary
+*.jpeg        binary
+*.gif         binary
+*.webp        binary
+*.ico         binary
+*.pdf         binary
+*.zip         binary
+*.gz          binary
+*.tar         binary
+*.woff        binary
+*.woff2       binary
+*.ttf         binary
+*.otf         binary

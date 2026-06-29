@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 架构 / 设计讨论
+    url: https://github.com/
+    about: 复杂设计讨论优先写 Spec（.comate/specs/），或在 Discussions 里讨论
+  - name: 贡献指南
+    url: ./CONTRIBUTING.md
+    about: 首次贡献前请阅读贡献流程
+  - name: Agent 硬规则
+    url: ./AGENTS.md
+    about: AI agent 在本仓库的强制规则

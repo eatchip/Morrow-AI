@@ -1,0 +1,52 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "react", "unicorn"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn",
+    "pedantic": "off",
+    "style": "off",
+    "perf": "warn"
+  },
+  "rules": {
+    "no-console": "off",
+    "typescript/no-explicit-any": "warn",
+    "react/react-in-jsx-scope": "off",
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "group": ["electron", "electron/*"],
+            "message": "Electron may only be imported from src/app/main/** and src/app/preload/** — renderer and shared business code must not depend on Electron directly."
+          }
+        ]
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": [
+        "src/app/main/**/*",
+        "src/app/preload/**/*",
+        "scripts/**/*",
+        "tests/e2e/**/*",
+        "tests/contract/**/*",
+        "tests/integration/**/*",
+        "electron.vite.config.ts"
+      ],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    }
+  ],
+  "ignorePatterns": [
+    "out/",
+    "dist/",
+    "coverage/",
+    "node_modules/",
+    "playwright-report/",
+    "test-results/",
+    "out-tsc/"
+  ]
+}

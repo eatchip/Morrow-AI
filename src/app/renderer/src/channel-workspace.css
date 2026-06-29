@@ -1,0 +1,361 @@
+/* Channel MVP: group chat, member panel, role drawer, and creation flows. */
+
+.channel-shell {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  background: var(--bg);
+}
+.channel-shell.has-members {
+  grid-template-columns: minmax(0, 1fr) 320px;
+}
+.channel-main {
+  min-width: 0;
+  min-height: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.channel-header {
+  height: 64px;
+  flex: 0 0 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 28px;
+  border-bottom: 1px solid var(--line);
+}
+.channel-header h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+.channel-header p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-family: var(--mono);
+  max-width: 560px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.channel-stream {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 24px 0 210px;
+}
+.channel-stream-inner {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 0 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.channel-empty-state,
+.channel-empty-thread {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--muted);
+}
+.channel-empty-state h1,
+.channel-empty-thread h2 {
+  margin: 0 0 8px;
+  color: var(--text);
+  font-size: 20px;
+}
+.channel-empty-state p,
+.channel-empty-thread p {
+  margin: 0;
+  font-size: 13px;
+}
+.channel-message {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 14px;
+}
+.channel-message .channel-avatar {
+  width: 30px;
+  height: 30px;
+  border: 0;
+  cursor: pointer;
+}
+.channel-message .user-avatar {
+  background: var(--panel-3);
+  color: var(--text);
+  cursor: default;
+}
+.message-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 30px;
+}
+.message-head strong,
+.message-head button {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 700;
+}
+.message-head button {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-family: var(--sans);
+  cursor: pointer;
+}
+.ai-chip,
+.mention-token {
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  background: var(--accent-bg);
+  border-radius: 5px;
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 1px 5px;
+}
+.message-body {
+  color: var(--text-2);
+  font-size: 14px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+.channel-message.muted .message-body {
+  color: var(--muted);
+}
+.channel-message.error .message-body {
+  color: var(--error);
+}
+.system-pill {
+  align-self: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 12px;
+  padding: 5px 12px;
+  font-family: var(--mono);
+}
+.handoff-card {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.handoff-card strong {
+  font-size: 13px;
+}
+.handoff-card p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.handoff-status {
+  color: var(--muted);
+  font-size: 12px;
+  font-family: var(--mono);
+}
+.channel-composer-wrap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 18px 32px 22px;
+  border-top: 1px solid var(--line);
+  background: var(--bg);
+  display: flex;
+  justify-content: center;
+}
+.channel-composer {
+  width: min(880px, 100%);
+  position: relative;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background: var(--panel);
+  padding: 10px;
+}
+.channel-composer textarea {
+  width: 100%;
+  min-height: 86px;
+  max-height: 180px;
+  resize: vertical;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.55;
+  padding: 4px;
+}
+.channel-composer-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+}
+.channel-composer-hint {
+  flex: 1;
+  color: var(--muted);
+  font-size: 11px;
+  font-family: var(--mono);
+}
+.channel-send {
+  min-width: 64px;
+}
+.mention-menu {
+  position: absolute;
+  left: 12px;
+  bottom: 54px;
+  width: 320px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: var(--panel);
+  padding: 6px;
+  z-index: 5;
+}
+.mention-item,
+.member-pick-row {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--text-2);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 8px;
+  padding: 8px;
+  text-align: left;
+  cursor: pointer;
+}
+.mention-item.active,
+.mention-item:hover,
+.member-pick-row:hover {
+  background: var(--panel-3);
+  color: var(--text);
+}
+.mention-main,
+.member-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mention-name,
+.member-main strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+.mention-intro,
+.member-main em,
+.member-main span {
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mention-empty,
+.dialog-muted {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+  padding: 10px;
+}
+.members-panel {
+  border-left: 1px solid var(--line);
+  background: var(--panel);
+  min-width: 0;
+  overflow: auto;
+}
+.members-head {
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--line);
+}
+.members-head h2 {
+  margin: 0;
+  font-size: 13px;
+}
+.member-picker {
+  border-bottom: 1px solid var(--line);
+  padding: 8px;
+}
+.member-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+}
+.member-card {
+  appearance: none;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel-2);
+  color: var(--text-2);
+  padding: 12px;
+  display: flex;
+  gap: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+.member-card:hover {
+  border-color: var(--line-strong);
+  color: var(--text);
+}
+.team-proposal-card {
+  flex-direction: column;
+  align-items: stretch;
+}
+.team-proposal-body strong {
+  display: block;
+  margin-bottom: 8px;
+}
+.team-proposal-fields {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  font-size: 13px;
+  margin: 0;
+}
+.team-proposal-fields dt {
+  color: var(--muted);
+  font-weight: 500;
+}
+.team-proposal-fields dd {
+  margin: 0;
+  color: var(--text-2);
+}
+.team-proposal-instruction {
+  white-space: pre-wrap;
+  max-height: 120px;
+  overflow: auto;
+  font-size: 12px;
+  font-family: var(--mono);
+  line-height: 1.5;
+}
+.team-proposal-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}

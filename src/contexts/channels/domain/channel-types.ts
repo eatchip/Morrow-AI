@@ -1,0 +1,18 @@
+export type {
+  AddRoleToChannelArgs,
+  Channel,
+  ChannelEvent,
+  ChannelSnapshot,
+  ConfirmTeamProposalArgs,
+  CreateChannelArgs,
+  CreateRoleArgs,
+  DeleteChannelArgs,
+  DeleteRoleArgs,
+  DismissTeamProposalArgs,
+  HandoffProposal,
+  PostChannelMessageArgs,
+  RoleProfile,
+  RoleRun,
+  TeamProposal,
+  UpdateRoleArgs,
+} from '../../../shared/channel-ipc';

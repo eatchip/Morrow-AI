@@ -1,0 +1,26 @@
+# EditorConfig — https://editorconfig.org
+# Unified editor behavior across contributors and AI agents.
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+[*.md]
+# Preserve trailing double-space (hard line break) in Markdown
+trim_trailing_whitespace = false
+max_line_length = off
+
+[Makefile]
+indent_style = tab
+
+[*.{py,go}]
+indent_size = 4
+
+[*.{yml,yaml,json,toml}]
+indent_size = 2

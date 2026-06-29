@@ -1,0 +1,1738 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Morrow · workspace roadmap prototype</title>
+    <style>
+      :root {
+        --bg: #0b0b0d;
+        --surface: #111114;
+        --surface-2: #15151a;
+        --surface-3: #1b1b21;
+        --surface-4: #222229;
+        --line: #232329;
+        --line-strong: #303039;
+        --text: #f0f0f2;
+        --text-2: #c9c9cf;
+        --muted: #8b8b94;
+        --disabled: #5f5f68;
+        --accent: #a3e635;
+        --accent-soft: rgba(163, 230, 53, 0.1);
+        --accent-line: rgba(163, 230, 53, 0.34);
+        --blue: #7dd3fc;
+        --blue-soft: rgba(125, 211, 252, 0.11);
+        --orange: #f59e0b;
+        --orange-soft: rgba(245, 158, 11, 0.12);
+        --rose: #fb7185;
+        --rose-soft: rgba(251, 113, 133, 0.12);
+        --violet: #c4b5fd;
+        --violet-soft: rgba(196, 181, 253, 0.12);
+        --ok: #a3e635;
+        --warn: #f59e0b;
+        --danger: #fb7185;
+        --radius-sm: 4px;
+        --radius-md: 6px;
+        --radius-lg: 8px;
+        --radius-xl: 12px;
+        --shadow-lg: 0 22px 70px rgba(0, 0, 0, 0.36);
+        --sans:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", "PingFang SC",
+          "Microsoft YaHei", sans-serif;
+        --mono: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, Consolas, monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--sans);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      button,
+      input,
+      textarea {
+        font: inherit;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .page {
+        min-height: 100vh;
+        display: grid;
+        grid-template-columns: 260px minmax(0, 1fr);
+      }
+
+      .roadmap-rail {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        padding: 24px 16px;
+        border-right: 1px solid var(--line);
+        background: rgba(11, 11, 13, 0.96);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 8px 22px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .brand-mark {
+        width: 28px;
+        height: 28px;
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius-lg);
+        display: grid;
+        place-items: center;
+        color: var(--accent);
+        font-family: var(--mono);
+        font-weight: 700;
+        font-size: 13px;
+        background: var(--surface-2);
+      }
+
+      .brand-title {
+        display: grid;
+        gap: 2px;
+      }
+
+      .brand-title strong {
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .brand-title span {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .rail-section {
+        padding: 18px 0;
+      }
+
+      .rail-label {
+        padding: 0 8px 10px;
+        color: var(--disabled);
+        font-family: var(--mono);
+        font-size: 11px;
+      }
+
+      .stage-nav {
+        display: grid;
+        gap: 6px;
+      }
+
+      .stage-nav a {
+        display: grid;
+        gap: 3px;
+        padding: 10px 8px;
+        border-radius: var(--radius-lg);
+        color: var(--text-2);
+      }
+
+      .stage-nav a:hover {
+        background: var(--surface-2);
+        color: var(--text);
+      }
+
+      .stage-nav strong {
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .stage-nav span {
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.35;
+      }
+
+      .rail-note {
+        margin: 18px 8px 0;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-lg);
+        background: var(--surface);
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.55;
+      }
+
+      .content {
+        min-width: 0;
+        padding: 32px;
+      }
+
+      .intro {
+        max-width: 1180px;
+        margin: 0 auto 28px;
+        display: grid;
+        gap: 14px;
+      }
+
+      .eyebrow {
+        color: var(--accent);
+        font-family: var(--mono);
+        font-size: 12px;
+      }
+
+      h1 {
+        margin: 0;
+        max-width: 900px;
+        color: var(--text);
+        font-size: 32px;
+        line-height: 1.2;
+        font-weight: 650;
+        letter-spacing: 0;
+      }
+
+      .intro p {
+        margin: 0;
+        max-width: 900px;
+        color: var(--text-2);
+        font-size: 14px;
+        line-height: 1.7;
+      }
+
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding-top: 4px;
+      }
+
+      .legend-item,
+      .pill,
+      .mini-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: var(--surface);
+        color: var(--text-2);
+      }
+
+      .legend-item {
+        padding: 6px 10px;
+        font-size: 12px;
+      }
+
+      .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background: var(--accent);
+      }
+
+      .dot.blue {
+        background: var(--blue);
+      }
+
+      .dot.orange {
+        background: var(--orange);
+      }
+
+      .dot.rose {
+        background: var(--rose);
+      }
+
+      .dot.violet {
+        background: var(--violet);
+      }
+
+      .stage {
+        max-width: 1180px;
+        margin: 0 auto 28px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-xl);
+        background: var(--surface);
+        box-shadow: var(--shadow-lg);
+        overflow: hidden;
+      }
+
+      .stage-head {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 18px;
+        padding: 18px 20px;
+        border-bottom: 1px solid var(--line);
+        background: var(--surface-2);
+      }
+
+      .stage-kicker {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 8px;
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 11px;
+      }
+
+      .stage-kicker .index {
+        color: var(--accent);
+      }
+
+      h2 {
+        margin: 0;
+        font-size: 20px;
+        line-height: 1.35;
+        font-weight: 650;
+        letter-spacing: 0;
+      }
+
+      .stage-summary {
+        margin: 8px 0 0;
+        max-width: 780px;
+        color: var(--text-2);
+        font-size: 13px;
+        line-height: 1.65;
+      }
+
+      .stage-change {
+        min-width: 250px;
+        align-self: center;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-lg);
+        background: var(--surface);
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.55;
+      }
+
+      .stage-change strong {
+        color: var(--text-2);
+        font-weight: 600;
+      }
+
+      .mock-window {
+        margin: 18px;
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius-xl);
+        background: #09090b;
+        overflow: hidden;
+      }
+
+      .window-top {
+        height: 40px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0 14px;
+        border-bottom: 1px solid var(--line);
+        background: var(--surface);
+      }
+
+      .traffic {
+        display: flex;
+        gap: 7px;
+      }
+
+      .traffic i {
+        width: 10px;
+        height: 10px;
+        display: block;
+        border-radius: 999px;
+        background: var(--surface-4);
+      }
+
+      .window-title {
+        flex: 1;
+        text-align: center;
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 11px;
+      }
+
+      .runtime-badge {
+        height: 24px;
+        padding: 0 9px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-md);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--text-2);
+        background: var(--surface-2);
+        font-size: 11px;
+      }
+
+      .app-shell {
+        min-height: 580px;
+        display: grid;
+        grid-template-columns: 230px minmax(0, 1fr);
+      }
+
+      .sidebar {
+        border-right: 1px solid var(--line);
+        background: var(--surface);
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .side-action {
+        height: 34px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-lg);
+        background: var(--surface-2);
+        color: var(--text-2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .side-group {
+        display: grid;
+        gap: 7px;
+      }
+
+      .side-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: var(--disabled);
+        font-family: var(--mono);
+        font-size: 11px;
+      }
+
+      .side-item {
+        min-height: 34px;
+        padding: 8px 9px;
+        border-radius: var(--radius-lg);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--text-2);
+        font-size: 12px;
+      }
+
+      .side-item.active {
+        background: var(--accent-soft);
+        color: var(--text);
+        box-shadow: inset 0 0 0 1px var(--accent-line);
+      }
+
+      .side-item.dim {
+        color: var(--muted);
+      }
+
+      .side-item .count {
+        margin-left: auto;
+        color: var(--disabled);
+        font-family: var(--mono);
+        font-size: 10px;
+      }
+
+      .main-panel {
+        min-width: 0;
+        background: #0c0c0f;
+        display: grid;
+      }
+
+      .worktop {
+        height: 54px;
+        padding: 0 18px;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: var(--surface);
+      }
+
+      .worktop-title {
+        flex: 1;
+        display: grid;
+        gap: 2px;
+      }
+
+      .worktop-title strong {
+        font-size: 13px;
+        font-weight: 650;
+      }
+
+      .worktop-title span {
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .pill {
+        height: 26px;
+        padding: 0 10px;
+        font-size: 11px;
+      }
+
+      .pill.accent {
+        border-color: var(--accent-line);
+        background: var(--accent-soft);
+        color: var(--accent);
+      }
+
+      .pill.blue {
+        border-color: rgba(125, 211, 252, 0.24);
+        background: var(--blue-soft);
+        color: var(--blue);
+      }
+
+      .pill.orange {
+        border-color: rgba(245, 158, 11, 0.26);
+        background: var(--orange-soft);
+        color: var(--orange);
+      }
+
+      .pill.rose {
+        border-color: rgba(251, 113, 133, 0.26);
+        background: var(--rose-soft);
+        color: var(--rose);
+      }
+
+      .view {
+        min-height: 526px;
+        padding: 18px;
+      }
+
+      .grid-2 {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(320px, 0.65fr);
+        gap: 14px;
+      }
+
+      .grid-3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 12px;
+      }
+
+      .panel {
+        min-width: 0;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-lg);
+        background: var(--surface);
+        overflow: hidden;
+      }
+
+      .panel-head {
+        min-height: 42px;
+        padding: 11px 12px;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .panel-head strong {
+        font-size: 12px;
+        font-weight: 650;
+      }
+
+      .panel-head span {
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .panel-body {
+        padding: 12px;
+      }
+
+      .composer {
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius-xl);
+        background: var(--surface);
+        padding: 12px;
+      }
+
+      .composer textarea {
+        width: 100%;
+        min-height: 74px;
+        resize: none;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: var(--text);
+        line-height: 1.55;
+        font-size: 13px;
+      }
+
+      .composer-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding-top: 8px;
+      }
+
+      .send {
+        width: 30px;
+        height: 30px;
+        border: 0;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        color: #0b0b0d;
+        background: var(--accent);
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .message-list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .message {
+        display: grid;
+        gap: 6px;
+      }
+
+      .message-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 11px;
+      }
+
+      .avatar {
+        width: 22px;
+        height: 22px;
+        border-radius: var(--radius-md);
+        display: grid;
+        place-items: center;
+        border: 1px solid var(--line);
+        background: var(--surface-2);
+        color: var(--text-2);
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 700;
+      }
+
+      .avatar.ai {
+        color: var(--accent);
+        background: var(--accent-soft);
+        border-color: var(--accent-line);
+      }
+
+      .avatar.blue {
+        color: var(--blue);
+        background: var(--blue-soft);
+      }
+
+      .avatar.orange {
+        color: var(--orange);
+        background: var(--orange-soft);
+      }
+
+      .bubble {
+        padding: 10px 12px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-lg);
+        background: var(--surface-2);
+        color: var(--text-2);
+        font-size: 12px;
+        line-height: 1.6;
+      }
+
+      .bubble.user {
+        margin-left: 36px;
+        background: var(--surface-3);
+        color: var(--text);
+      }
+
+      .terminal {
+        min-height: 270px;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-lg);
+        background: #050506;
+        color: var(--text-2);
+        font-family: var(--mono);
+        font-size: 11px;
+        line-height: 1.65;
+        overflow: hidden;
+      }
+
+      .terminal .ok {
+        color: var(--accent);
+      }
+
+      .terminal .muted {
+        color: var(--disabled);
+      }
+
+      .terminal .blue {
+        color: var(--blue);
+      }
+
+      .task-list {
+        display: grid;
+        gap: 9px;
+      }
+
+      .task {
+        padding: 11px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-lg);
+        background: var(--surface-2);
+        display: grid;
+        gap: 7px;
+      }
+
+      .task.active {
+        border-color: var(--accent-line);
+        background: var(--accent-soft);
+      }
+
+      .task-title {
+        display: flex;
+        align-items: start;
+        gap: 8px;
+      }
+
+      .task-title strong {
+        flex: 1;
+        color: var(--text);
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1.45;
+      }
+
+      .task-meta {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .mini-pill {
+        height: 20px;
+        padding: 0 7px;
+        font-size: 10px;
+      }
+
+      .mini-pill.ai {
+        color: var(--accent);
+        border-color: var(--accent-line);
+        background: var(--accent-soft);
+      }
+
+      .mini-pill.blue {
+        color: var(--blue);
+        border-color: rgba(125, 211, 252, 0.24);
+        background: var(--blue-soft);
+      }
+
+      .mini-pill.orange {
+        color: var(--orange);
+        border-color: rgba(245, 158, 11, 0.26);
+        background: var(--orange-soft);
+      }
+
+      .mini-pill.rose {
+        color: var(--rose);
+        border-color: rgba(251, 113, 133, 0.26);
+        background: var(--rose-soft);
+      }
+
+      .progress {
+        height: 5px;
+        border-radius: 999px;
+        background: var(--surface-4);
+        overflow: hidden;
+      }
+
+      .progress i {
+        display: block;
+        height: 100%;
+        border-radius: 999px;
+        background: var(--accent);
+      }
+
+      .approval {
+        border: 1px solid rgba(245, 158, 11, 0.3);
+        border-radius: var(--radius-lg);
+        background: var(--orange-soft);
+        padding: 12px;
+        display: grid;
+        gap: 10px;
+      }
+
+      .approval strong {
+        color: var(--text);
+        font-size: 12px;
+      }
+
+      .approval p {
+        margin: 0;
+        color: var(--text-2);
+        font-size: 12px;
+        line-height: 1.55;
+      }
+
+      .approval-actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .btn {
+        height: 30px;
+        padding: 0 11px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-md);
+        background: var(--surface);
+        color: var(--text-2);
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .btn.primary {
+        border-color: var(--accent-line);
+        background: var(--accent);
+        color: #0b0b0d;
+      }
+
+      .channel {
+        display: grid;
+        gap: 12px;
+      }
+
+      .timeline-item {
+        display: grid;
+        grid-template-columns: 24px minmax(0, 1fr);
+        gap: 10px;
+      }
+
+      .timeline-line {
+        display: grid;
+        justify-items: center;
+      }
+
+      .timeline-dot {
+        width: 10px;
+        height: 10px;
+        margin-top: 7px;
+        border-radius: 999px;
+        background: var(--accent);
+      }
+
+      .timeline-bar {
+        width: 1px;
+        min-height: 44px;
+        background: var(--line-strong);
+      }
+
+      .timeline-card {
+        padding: 10px 12px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-lg);
+        background: var(--surface-2);
+        display: grid;
+        gap: 6px;
+      }
+
+      .timeline-card strong {
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .timeline-card p {
+        margin: 0;
+        color: var(--text-2);
+        font-size: 12px;
+        line-height: 1.55;
+      }
+
+      .agent-grid {
+        display: grid;
+        gap: 10px;
+      }
+
+      .agent-card {
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-lg);
+        background: var(--surface-2);
+        display: grid;
+        gap: 10px;
+      }
+
+      .agent-card.active {
+        border-color: var(--accent-line);
+        background: var(--accent-soft);
+      }
+
+      .agent-line {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+      }
+
+      .agent-line strong {
+        font-size: 12px;
+        font-weight: 650;
+      }
+
+      .agent-card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.55;
+      }
+
+      .handoff {
+        border: 1px solid var(--line);
+        border-radius: var(--radius-lg);
+        background: var(--surface-2);
+        overflow: hidden;
+      }
+
+      .handoff-row {
+        display: grid;
+        grid-template-columns: 130px minmax(0, 1fr) 90px;
+        gap: 10px;
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--line);
+        align-items: center;
+        color: var(--text-2);
+        font-size: 12px;
+      }
+
+      .handoff-row:last-child {
+        border-bottom: 0;
+      }
+
+      .handoff-row span:first-child,
+      .handoff-row span:last-child {
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 11px;
+      }
+
+      .matrix {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+      }
+
+      .matrix-cell {
+        min-height: 92px;
+        padding: 11px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-lg);
+        background: var(--surface-2);
+        display: grid;
+        align-content: start;
+        gap: 8px;
+      }
+
+      .matrix-cell strong {
+        font-size: 12px;
+        font-weight: 650;
+      }
+
+      .matrix-cell span {
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.5;
+      }
+
+      .takeaways {
+        padding: 0 18px 18px;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .takeaway {
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-lg);
+        background: var(--surface-2);
+      }
+
+      .takeaway strong {
+        display: block;
+        margin-bottom: 6px;
+        color: var(--text);
+        font-size: 12px;
+        font-weight: 650;
+      }
+
+      .takeaway span {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.55;
+      }
+
+      .stage-foot {
+        padding: 14px 18px 18px;
+        border-top: 1px solid var(--line);
+        display: grid;
+        gap: 8px;
+      }
+
+      .stage-foot strong {
+        color: var(--text-2);
+        font-size: 12px;
+      }
+
+      .stage-foot ul {
+        margin: 0;
+        padding-left: 18px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.7;
+      }
+
+      .footer-note {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 16px 0 40px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.6;
+      }
+
+      @media (max-width: 1040px) {
+        .page {
+          grid-template-columns: 1fr;
+        }
+
+        .roadmap-rail {
+          position: static;
+          height: auto;
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+        }
+
+        .stage-nav {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .content {
+          padding: 22px;
+        }
+
+        .stage-head,
+        .grid-2,
+        .grid-3,
+        .takeaways,
+        .matrix {
+          grid-template-columns: 1fr;
+        }
+
+        .stage-change {
+          min-width: 0;
+        }
+      }
+
+      @media (max-width: 760px) {
+        .stage-nav {
+          grid-template-columns: 1fr;
+        }
+
+        .content {
+          padding: 14px;
+        }
+
+        .app-shell {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+        }
+
+        .handoff-row {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <aside class="roadmap-rail">
+        <div class="brand">
+          <div class="brand-mark">D</div>
+          <div class="brand-title">
+            <strong>Morrow Roadmap</strong>
+            <span>AI 工作空间前端阶段稿</span>
+          </div>
+        </div>
+
+        <div class="rail-section">
+          <div class="rail-label">阶段</div>
+          <nav class="stage-nav" aria-label="Morrow stages">
+            <a href="#stage-0">
+              <strong>0. 当前态</strong>
+              <span>项目 + 对话 + Codex 终端</span>
+            </a>
+            <a href="#stage-1">
+              <strong>1. Workspace Kernel</strong>
+              <span>任务、运行、时间线成为主对象</span>
+            </a>
+            <a href="#stage-2">
+              <strong>2. 第一个 AI 同事</strong>
+              <span>Engineer 接任务、汇报、等审批</span>
+            </a>
+            <a href="#stage-3">
+              <strong>3. 协作时间线</strong>
+              <span>人和 AI 在同一个频道里工作</span>
+            </a>
+            <a href="#stage-4">
+              <strong>4. 多同事调度</strong>
+              <span>多个 AI 同事分工与交接</span>
+            </a>
+          </nav>
+          <div class="rail-note">
+            这个文件只表达“每个阶段前端大概长什么样”。它不是最终 UI 规范，也不是要一次性全部开发。
+          </div>
+        </div>
+      </aside>
+
+      <main class="content">
+        <section class="intro">
+          <div class="eyebrow">Large direction, shown as HTML</div>
+          <h1>把 Morrow 从“可调用 Codex 的聊天壳”，逐步做成“本地项目里的 AI 同事工作空间”。</h1>
+          <p>
+            下面每一屏都是一个阶段的目标形态。重点看信息架构怎么变化：左侧从“项目/对话”变成“工作区/任务/同事”，中间从“聊天”变成“任务与运行”，右侧逐步出现 timeline、approval、handoff。
+          </p>
+          <div class="legend">
+            <span class="legend-item"><i class="dot"></i>执行中</span>
+            <span class="legend-item"><i class="dot blue"></i>上下文/频道</span>
+            <span class="legend-item"><i class="dot orange"></i>需要审批</span>
+            <span class="legend-item"><i class="dot rose"></i>风险/阻塞</span>
+            <span class="legend-item"><i class="dot violet"></i>多 Agent 协作</span>
+          </div>
+        </section>
+
+        <section id="stage-0" class="stage">
+          <header class="stage-head">
+            <div>
+              <div class="stage-kicker"><span class="index">Stage 0</span><span>v0.2 当前态</span></div>
+              <h2>当前 Morrow：项目绑定的 Agent CLI 桌面壳</h2>
+              <p class="stage-summary">
+                这一阶段前端核心还是“选项目、开对话、跑 Codex 终端”。它已经有价值，但用户看到的是 conversation，不是 work。
+              </p>
+            </div>
+            <div class="stage-change">
+              <strong>前端关键词</strong><br />
+              Home / Chat / Project Picker / Terminal Pane / Runtime Badge
+            </div>
+          </header>
+
+          <div class="mock-window">
+            <div class="window-top">
+              <div class="traffic"><i></i><i></i><i></i></div>
+              <div class="window-title">Morrow · Project Chat</div>
+              <div class="runtime-badge"><i class="dot"></i> Codex</div>
+            </div>
+            <div class="app-shell">
+              <aside class="sidebar">
+                <div class="side-action">+ 新建对话</div>
+                <div class="side-group">
+                  <div class="side-heading"><span>项目</span><span>+</span></div>
+                  <div class="side-item active"><span>▾</span><span>Morrow</span><span class="count">3</span></div>
+                  <div class="side-item dim"><span></span><span>修复流式输出</span></div>
+                  <div class="side-item dim"><span></span><span>调研模型选择</span></div>
+                  <div class="side-item"><span>▸</span><span>OpenCove</span><span class="count">1</span></div>
+                </div>
+                <div class="side-group">
+                  <div class="side-heading"><span>对话</span></div>
+                  <div class="side-item">无项目临时对话</div>
+                </div>
+              </aside>
+              <main class="main-panel">
+                <div class="worktop">
+                  <div class="worktop-title">
+                    <strong>Morrow / 修复流式输出</strong>
+                    <span>项目 cwd 已锁定，Codex PTY session 正在运行</span>
+                  </div>
+                  <span class="pill accent">gpt-5.4 · high</span>
+                </div>
+                <div class="view grid-2">
+                  <section class="panel">
+                    <div class="panel-head"><strong>Chat</strong><span>conversation scoped</span></div>
+                    <div class="panel-body message-list">
+                      <div class="message">
+                        <div class="bubble user">帮我看下 Codex 为什么不再逐 token 流式。</div>
+                      </div>
+                      <div class="message">
+                        <div class="message-head"><span class="avatar ai">AI</span><span>Codex</span></div>
+                        <div class="bubble">我会先看 runtime-session 和 renderer 的流式更新路径，再确认 CLI 协议是否变了。</div>
+                      </div>
+                      <div class="composer">
+                        <textarea>继续排查 fallback 行为...</textarea>
+                        <div class="composer-row">
+                          <span class="pill">Morrow</span>
+                          <span class="pill">Codex</span>
+                          <span style="flex: 1"></span>
+                          <button class="send">↵</button>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+                  <section class="panel">
+                    <div class="panel-head"><strong>Terminal</strong><span>raw agent session</span></div>
+                    <div class="panel-body">
+                      <div class="terminal">
+                        <span class="muted">$ rg "agent_message_delta" src</span><br />
+                        src/app/main/codex-mcp.ts<br />
+                        <span class="muted">$ pnpm test -- --run tests/integration/codex-mcp.spec.ts</span><br />
+                        <span class="ok">✓</span> initialize + deltas + done<br />
+                        <span class="ok">✓</span> fallback when mcp unavailable<br />
+                        <span class="blue">thinking</span> renderer currently stores only one active streaming ref...
+                      </div>
+                    </div>
+                  </section>
+                </div>
+              </main>
+            </div>
+          </div>
+
+          <div class="takeaways">
+            <div class="takeaway">
+              <strong>用户感知</strong>
+              <span>“我在跟 Codex 对话，让它在某个项目里跑。”</span>
+            </div>
+            <div class="takeaway">
+              <strong>主要限制</strong>
+              <span>没有任务对象，没有可审计工作历史，关闭后很多运行态不可恢复。</span>
+            </div>
+            <div class="takeaway">
+              <strong>下一步要变</strong>
+              <span>把 conversation 降级为沟通载体，把 task/run/timeline 提升为主对象。</span>
+            </div>
+          </div>
+        </section>
+
+        <section id="stage-1" class="stage">
+          <header class="stage-head">
+            <div>
+              <div class="stage-kicker"><span class="index">Stage 1</span><span>v0.3 Workspace Kernel</span></div>
+              <h2>工作区内先出现“任务”和“运行记录”</h2>
+              <p class="stage-summary">
+                这一阶段不急着做多个 AI 角色。先让 Morrow 变成一个能保存任务、执行记录和时间线的本地工作空间。
+              </p>
+            </div>
+            <div class="stage-change">
+              <strong>前端变化</strong><br />
+              左侧增加 Workspace 导航；中间是任务队列；右侧是选中任务的 Run 与 Timeline。
+            </div>
+          </header>
+
+          <div class="mock-window">
+            <div class="window-top">
+              <div class="traffic"><i></i><i></i><i></i></div>
+              <div class="window-title">Morrow · Workspace Kernel</div>
+              <div class="runtime-badge"><i class="dot"></i> Workspace active</div>
+            </div>
+            <div class="app-shell">
+              <aside class="sidebar">
+                <div class="side-action">+ 新建任务</div>
+                <div class="side-group">
+                  <div class="side-heading"><span>工作区</span></div>
+                  <div class="side-item active"><span>Morrow</span><span class="count">8</span></div>
+                  <div class="side-item"><span>Personal Site</span><span class="count">2</span></div>
+                </div>
+                <div class="side-group">
+                  <div class="side-heading"><span>视图</span></div>
+                  <div class="side-item active">任务</div>
+                  <div class="side-item">运行记录</div>
+                  <div class="side-item">时间线</div>
+                  <div class="side-item">设置</div>
+                </div>
+              </aside>
+              <main class="main-panel">
+                <div class="worktop">
+                  <div class="worktop-title">
+                    <strong>Morrow Workspace</strong>
+                    <span>8 tasks · 2 runs active · local facts persisted</span>
+                  </div>
+                  <span class="pill accent">New task</span>
+                  <span class="pill">Filter</span>
+                </div>
+                <div class="view grid-2">
+                  <section class="panel">
+                    <div class="panel-head"><strong>Tasks</strong><span>group by status</span></div>
+                    <div class="panel-body task-list">
+                      <div class="task active">
+                        <div class="task-title">
+                          <strong>把 Codex session 归属到持久化 Run</strong>
+                          <span class="mini-pill ai">Running</span>
+                        </div>
+                        <div class="task-meta">
+                          <span>TASK-014</span><span>Engineer</span><span>Today</span>
+                        </div>
+                        <div class="progress"><i style="width: 58%"></i></div>
+                      </div>
+                      <div class="task">
+                        <div class="task-title">
+                          <strong>定义 TimelineEvent 的最小 schema</strong>
+                          <span class="mini-pill blue">Spec</span>
+                        </div>
+                        <div class="task-meta">
+                          <span>TASK-015</span><span>Needs review</span>
+                        </div>
+                      </div>
+                      <div class="task">
+                        <div class="task-title">
+                          <strong>补一条重启恢复集成测试</strong>
+                          <span class="mini-pill orange">Next</span>
+                        </div>
+                        <div class="task-meta">
+                          <span>TASK-016</span><span>No assignee</span>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+                  <section class="panel">
+                    <div class="panel-head"><strong>Selected task</strong><span>run + facts</span></div>
+                    <div class="panel-body channel">
+                      <div class="timeline-item">
+                        <div class="timeline-line"><i class="timeline-dot"></i><i class="timeline-bar"></i></div>
+                        <div class="timeline-card">
+                          <strong>Task created</strong>
+                          <p>用户创建任务，并绑定到 Morrow 工作区。</p>
+                        </div>
+                      </div>
+                      <div class="timeline-item">
+                        <div class="timeline-line"><i class="timeline-dot"></i><i class="timeline-bar"></i></div>
+                        <div class="timeline-card">
+                          <strong>Run started</strong>
+                          <p>Codex PTY session 启动，cwd = /Users/songhuiyu/Morrow。</p>
+                        </div>
+                      </div>
+                      <div class="timeline-item">
+                        <div class="timeline-line"><i class="timeline-dot orange"></i></div>
+                        <div class="timeline-card">
+                          <strong>Needs approval model</strong>
+                          <p>本阶段只记录“需要审批”的事实，不真正接外部系统。</p>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+                </div>
+              </main>
+            </div>
+          </div>
+
+          <div class="stage-foot">
+            <strong>这个阶段做完后，你应该看到什么</strong>
+            <ul>
+              <li>首页不再只是大输入框，而是进入某个 Workspace。</li>
+              <li>对话会挂到 Task/Run 上，用户可以回看“这次工作做了什么”。</li>
+              <li>重启 Morrow 后，任务和时间线还在；PTY 是否恢复另行定义。</li>
+            </ul>
+          </div>
+        </section>
+
+        <section id="stage-2" class="stage">
+          <header class="stage-head">
+            <div>
+              <div class="stage-kicker"><span class="index">Stage 2</span><span>v0.4 First AI Colleague</span></div>
+              <h2>出现第一个真正的 AI 同事：Engineer</h2>
+              <p class="stage-summary">
+                AI 不再只是“当前 runtime”。它有名字、职责、权限、正在做的任务、需要你审批的动作。先只做一个 Engineer，避免多角色聊天先膨胀。
+              </p>
+            </div>
+            <div class="stage-change">
+              <strong>前端变化</strong><br />
+              增加 AI Teammates 区域；任务可以分配给 Engineer；高风险动作以 Approval Card 出现。
+            </div>
+          </header>
+
+          <div class="mock-window">
+            <div class="window-top">
+              <div class="traffic"><i></i><i></i><i></i></div>
+              <div class="window-title">Morrow · AI Colleague</div>
+              <div class="runtime-badge"><i class="dot"></i> Engineer online</div>
+            </div>
+            <div class="app-shell">
+              <aside class="sidebar">
+                <div class="side-action">+ Assign work</div>
+                <div class="side-group">
+                  <div class="side-heading"><span>AI 同事</span></div>
+                  <div class="side-item active"><span class="avatar ai">EN</span><span>Engineer</span><span class="count">2</span></div>
+                </div>
+                <div class="side-group">
+                  <div class="side-heading"><span>任务</span></div>
+                  <div class="side-item active">我的审批</div>
+                  <div class="side-item">Engineer 队列</div>
+                  <div class="side-item">已完成</div>
+                </div>
+              </aside>
+              <main class="main-panel">
+                <div class="worktop">
+                  <div class="worktop-title">
+                    <strong>Engineer</strong>
+                    <span>Can read repo · can edit files · commit requires approval</span>
+                  </div>
+                  <span class="pill accent">Active run</span>
+                  <span class="pill orange">1 approval</span>
+                </div>
+                <div class="view grid-2">
+                  <section class="panel">
+                    <div class="panel-head"><strong>Engineer queue</strong><span>owned by AI colleague</span></div>
+                    <div class="panel-body task-list">
+                      <div class="agent-card active">
+                        <div class="agent-line">
+                          <span class="avatar ai">EN</span>
+                          <strong>Working on TASK-014</strong>
+                          <span class="mini-pill ai">58%</span>
+                        </div>
+                        <p>正在把 Codex PTY session 关联到 Run，并补最窄路径测试。</p>
+                        <div class="progress"><i style="width: 58%"></i></div>
+                      </div>
+                      <div class="task">
+                        <div class="task-title">
+                          <strong>补 TimelineEvent contract tests</strong>
+                          <span class="mini-pill blue">Queued</span>
+                        </div>
+                        <div class="task-meta"><span>After TASK-014</span><span>Auto start disabled</span></div>
+                      </div>
+                      <div class="approval">
+                        <strong>Approval required: commit changes</strong>
+                        <p>Engineer 已完成实现和测试，准备提交：fix(runtime): persist run ownership。</p>
+                        <div class="approval-actions">
+                          <button class="btn primary">Approve</button>
+                          <button class="btn">Review diff</button>
+                          <button class="btn">Request changes</button>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+                  <section class="panel">
+                    <div class="panel-head"><strong>Run detail</strong><span>legible responsibility</span></div>
+                    <div class="panel-body channel">
+                      <div class="message">
+                        <div class="message-head"><span class="avatar ai">EN</span><span>Engineer · 10:31</span></div>
+                        <div class="bubble">我已经确认 owner：Task 是 durable fact，PTY session 是 runtime observation，Run 负责连接两者。</div>
+                      </div>
+                      <div class="terminal">
+                        <span class="muted">$ pnpm test -- --run tests/contract/run-ownership.spec.ts</span><br />
+                        <span class="ok">✓</span> run belongs to exactly one task<br />
+                        <span class="ok">✓</span> terminal session can be missing after restart<br />
+                        <span class="muted">$ git diff --stat</span><br />
+                        src/contexts/workspace/...  <span class="blue">142 +++++</span>
+                      </div>
+                    </div>
+                  </section>
+                </div>
+              </main>
+            </div>
+          </div>
+
+          <div class="stage-foot">
+            <strong>这个阶段做完后，你应该看到什么</strong>
+            <ul>
+              <li>AI 有“同事身份”，不只是模型选择器。</li>
+              <li>AI 可以推进任务，但提交、推送、删除、外发这类动作必须等你批准。</li>
+              <li>责任是可见的：谁创建任务、谁执行、谁审批，一眼看清。</li>
+            </ul>
+          </div>
+        </section>
+
+        <section id="stage-3" class="stage">
+          <header class="stage-head">
+            <div>
+              <div class="stage-kicker"><span class="index">Stage 3</span><span>v0.5 Collaboration Timeline</span></div>
+              <h2>从“任务详情”扩展为“频道里的工作时间线”</h2>
+              <p class="stage-summary">
+                这一阶段开始接近 Helio 的启发：不是 AI 私下工作，而是人和 AI 在同一个 channel/timeline 里把上下文、决策、任务和运行结果串起来。
+              </p>
+            </div>
+            <div class="stage-change">
+              <strong>前端变化</strong><br />
+              中间变成 channel timeline；右侧保留 task/run/approval 侧栏，减少上下文切换。
+            </div>
+          </header>
+
+          <div class="mock-window">
+            <div class="window-top">
+              <div class="traffic"><i></i><i></i><i></i></div>
+              <div class="window-title">Morrow · Channel Timeline</div>
+              <div class="runtime-badge"><i class="dot blue"></i> #build-room</div>
+            </div>
+            <div class="app-shell">
+              <aside class="sidebar">
+                <div class="side-action">+ New channel</div>
+                <div class="side-group">
+                  <div class="side-heading"><span>频道</span></div>
+                  <div class="side-item active"><span># build-room</span><span class="count">12</span></div>
+                  <div class="side-item"><span># design-review</span><span class="count">4</span></div>
+                  <div class="side-item"><span># release</span><span class="count">2</span></div>
+                </div>
+                <div class="side-group">
+                  <div class="side-heading"><span>AI 同事</span></div>
+                  <div class="side-item"><span class="avatar ai">EN</span><span>Engineer</span></div>
+                  <div class="side-item"><span class="avatar blue">RW</span><span>Researcher</span></div>
+                </div>
+              </aside>
+              <main class="main-panel">
+                <div class="worktop">
+                  <div class="worktop-title">
+                    <strong># build-room</strong>
+                    <span>Tasks, decisions, runs, approvals in one timeline</span>
+                  </div>
+                  <span class="pill blue">Pinned: workspace-kernel</span>
+                  <span class="pill orange">2 pending</span>
+                </div>
+                <div class="view grid-2">
+                  <section class="panel">
+                    <div class="panel-head"><strong>Timeline</strong><span>shared context</span></div>
+                    <div class="panel-body channel">
+                      <div class="message">
+                        <div class="message-head"><span class="avatar">Y</span><span>You · 09:12</span></div>
+                        <div class="bubble user">我们先只做本地 workspace，不碰邮件和会议。</div>
+                      </div>
+                      <div class="timeline-item">
+                        <div class="timeline-line"><i class="timeline-dot blue"></i><i class="timeline-bar"></i></div>
+                        <div class="timeline-card">
+                          <strong>Decision recorded</strong>
+                          <p>Non-goal: email / meeting / social integration are out of v0.5.</p>
+                        </div>
+                      </div>
+                      <div class="message">
+                        <div class="message-head"><span class="avatar ai">EN</span><span>Engineer · 09:20</span></div>
+                        <div class="bubble">我已把这个决策挂到 TASK-014，后续实现会只处理 workspace 内部事实。</div>
+                      </div>
+                      <div class="timeline-item">
+                        <div class="timeline-line"><i class="timeline-dot orange"></i></div>
+                        <div class="timeline-card">
+                          <strong>Approval card posted</strong>
+                          <p>PR summary 已生成，等待你确认是否进入实现阶段。</p>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+                  <section class="panel">
+                    <div class="panel-head"><strong>Right rail</strong><span>live work objects</span></div>
+                    <div class="panel-body task-list">
+                      <div class="task active">
+                        <div class="task-title">
+                          <strong>TASK-014 · Workspace Kernel</strong>
+                          <span class="mini-pill ai">Running</span>
+                        </div>
+                        <div class="task-meta"><span>Engineer</span><span>1 approval</span><span>3 events today</span></div>
+                      </div>
+                      <div class="approval">
+                        <strong>Approve Spec before coding</strong>
+                        <p>Large 任务需要 Spec → Approval → Plan → Approval → Execute。</p>
+                        <div class="approval-actions">
+                          <button class="btn primary">Approve Spec</button>
+                          <button class="btn">Open doc</button>
+                        </div>
+                      </div>
+                      <div class="handoff">
+                        <div class="handoff-row"><span>09:12</span><strong>Decision</strong><span>recorded</span></div>
+                        <div class="handoff-row"><span>09:20</span><strong>Run update</strong><span>active</span></div>
+                        <div class="handoff-row"><span>09:31</span><strong>Approval</strong><span>pending</span></div>
+                      </div>
+                    </div>
+                  </section>
+                </div>
+              </main>
+            </div>
+          </div>
+
+          <div class="stage-foot">
+            <strong>这个阶段做完后，你应该看到什么</strong>
+            <ul>
+              <li>一个项目可以有多个频道，比如 build-room、design-review、release。</li>
+              <li>聊天消息、任务变更、运行结果和审批卡在同一条时间线上。</li>
+              <li>用户不需要问“做到哪了”，timeline 本身就是状态汇报。</li>
+            </ul>
+          </div>
+        </section>
+
+        <section id="stage-4" class="stage">
+          <header class="stage-head">
+            <div>
+              <div class="stage-kicker"><span class="index">Stage 4</span><span>v0.6 Multi-Agent Workspace</span></div>
+              <h2>多个 AI 同事协作，但所有权仍然清楚</h2>
+              <p class="stage-summary">
+                只有在 Task/Run/Timeline/Approval 都稳定后，才值得加入多个 AI 同事。否则多 Agent 只是热闹；这个阶段的重点是分工、交接和权限边界。
+              </p>
+            </div>
+            <div class="stage-change">
+              <strong>前端变化</strong><br />
+              增加 agent board、handoff 表和权限矩阵；用户看到的是协作，不是多个聊天窗口。
+            </div>
+          </header>
+
+          <div class="mock-window">
+            <div class="window-top">
+              <div class="traffic"><i></i><i></i><i></i></div>
+              <div class="window-title">Morrow · AI Teammate Workspace</div>
+              <div class="runtime-badge"><i class="dot violet"></i> 3 AI colleagues</div>
+            </div>
+            <div class="app-shell">
+              <aside class="sidebar">
+                <div class="side-action">+ Delegate batch</div>
+                <div class="side-group">
+                  <div class="side-heading"><span>AI 同事</span></div>
+                  <div class="side-item active"><span class="avatar ai">EN</span><span>Engineer</span><span class="count">2</span></div>
+                  <div class="side-item"><span class="avatar blue">RS</span><span>Researcher</span><span class="count">1</span></div>
+                  <div class="side-item"><span class="avatar orange">RV</span><span>Reviewer</span><span class="count">1</span></div>
+                </div>
+                <div class="side-group">
+                  <div class="side-heading"><span>控制面</span></div>
+                  <div class="side-item">审批队列</div>
+                  <div class="side-item">权限</div>
+                  <div class="side-item">记忆</div>
+                </div>
+              </aside>
+              <main class="main-panel">
+                <div class="worktop">
+                  <div class="worktop-title">
+                    <strong>Workspace Operations</strong>
+                    <span>Multi-agent work is visible, bounded, and reviewable</span>
+                  </div>
+                  <span class="pill accent">2 running</span>
+                  <span class="pill blue">1 handoff</span>
+                  <span class="pill orange">3 approvals</span>
+                </div>
+                <div class="view">
+                  <div class="grid-3">
+                    <section class="panel">
+                      <div class="panel-head"><strong>Agent board</strong><span>capacity</span></div>
+                      <div class="panel-body agent-grid">
+                        <div class="agent-card active">
+                          <div class="agent-line"><span class="avatar ai">EN</span><strong>Engineer</strong><span class="mini-pill ai">coding</span></div>
+                          <p>Owns implementation runs. Can edit files. Commit requires approval.</p>
+                        </div>
+                        <div class="agent-card">
+                          <div class="agent-line"><span class="avatar blue">RS</span><strong>Researcher</strong><span class="mini-pill blue">reading</span></div>
+                          <p>Collects references and writes brief. Read-only repo access.</p>
+                        </div>
+                        <div class="agent-card">
+                          <div class="agent-line"><span class="avatar orange">RV</span><strong>Reviewer</strong><span class="mini-pill orange">review</span></div>
+                          <p>Reviews diffs and tests. Cannot write production files.</p>
+                        </div>
+                      </div>
+                    </section>
+
+                    <section class="panel">
+                      <div class="panel-head"><strong>Handoffs</strong><span>not hidden prompts</span></div>
+                      <div class="panel-body">
+                        <div class="handoff">
+                          <div class="handoff-row"><span>Researcher</span><strong>Spec references ready</strong><span>to Engineer</span></div>
+                          <div class="handoff-row"><span>Engineer</span><strong>Patch ready for review</strong><span>to Reviewer</span></div>
+                          <div class="handoff-row"><span>Reviewer</span><strong>1 blocking issue found</strong><span>to You</span></div>
+                          <div class="handoff-row"><span>You</span><strong>Approve final commit</strong><span>pending</span></div>
+                        </div>
+                      </div>
+                    </section>
+
+                    <section class="panel">
+                      <div class="panel-head"><strong>Approvals</strong><span>human gate</span></div>
+                      <div class="panel-body task-list">
+                        <div class="approval">
+                          <strong>Push to origin main</strong>
+                          <p>Requires explicit human approval. Includes tests and diff summary.</p>
+                          <div class="approval-actions">
+                            <button class="btn primary">Approve</button>
+                            <button class="btn">Inspect</button>
+                          </div>
+                        </div>
+                        <div class="task">
+                          <div class="task-title">
+                            <strong>Update memory note</strong>
+                            <span class="mini-pill rose">Review</span>
+                          </div>
+                          <div class="task-meta"><span>Source: TASK-014</span><span>reversible</span></div>
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+
+                  <div style="height: 12px"></div>
+
+                  <section class="panel">
+                    <div class="panel-head"><strong>Capability matrix</strong><span>clear boundaries before autonomy</span></div>
+                    <div class="panel-body matrix">
+                      <div class="matrix-cell">
+                        <strong>Engineer</strong>
+                        <span>Read repo, edit files, run tests, open diff. Commit/push gated.</span>
+                      </div>
+                      <div class="matrix-cell">
+                        <strong>Researcher</strong>
+                        <span>Read docs, browse references, summarize. No file write by default.</span>
+                      </div>
+                      <div class="matrix-cell">
+                        <strong>Reviewer</strong>
+                        <span>Read diff, run tests, leave findings. Cannot approve own work.</span>
+                      </div>
+                    </div>
+                  </section>
+                </div>
+              </main>
+            </div>
+          </div>
+
+          <div class="stage-foot">
+            <strong>这个阶段做完后，你应该看到什么</strong>
+            <ul>
+              <li>多 AI 同事不是多开几个聊天框，而是同一套 Task/Run/Timeline 里的不同 contributor。</li>
+              <li>handoff 是显式对象：谁把什么交给谁，交接依据是什么。</li>
+              <li>权限矩阵进入 UI，用户可以理解每个 AI 能做什么、不能做什么。</li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="stage">
+          <header class="stage-head">
+            <div>
+              <div class="stage-kicker"><span class="index">Summary</span><span>怎么读这份图</span></div>
+              <h2>我真正想表达的不是“加很多功能”，而是换主语</h2>
+              <p class="stage-summary">
+                当前主语是 conversation。下一阶段主语应该变成 workspace work：任务、运行、时间线、审批、交接。AI 同事只是这些对象上的参与者。
+              </p>
+            </div>
+            <div class="stage-change">
+              <strong>一句话</strong><br />
+              先把工作事实做出来，再让 AI 同事在里面工作。
+            </div>
+          </header>
+          <div class="stage-foot">
+            <strong>建议的最小下一步</strong>
+            <ul>
+              <li>只做 Stage 1 的 SDD：Workspace Kernel。</li>
+              <li>不要同时做 email、meeting、social、多个 AI 角色。</li>
+              <li>验收标准是：用户能从一个任务看到 AI 的运行、产物、审批点和历史。</li>
+            </ul>
+          </div>
+        </section>
+
+        <div class="footer-note">
+          Prototype v1. Static HTML only. Designed for discussion; no production code is changed.
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

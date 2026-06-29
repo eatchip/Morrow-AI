@@ -1,0 +1,2190 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Morrow · Channel Role Chat MVP</title>
+    <style>
+      :root {
+        --bg: #0b0b0d;
+        --surface: #111114;
+        --surface-2: #17171b;
+        --surface-3: #202027;
+        --line: #25252c;
+        --line-strong: #34343d;
+        --text: #f1f1f2;
+        --text-2: #c7c7cd;
+        --muted: #8c8c95;
+        --disabled: #62626b;
+        --accent: #ff7a1a;
+        --accent-2: #a3e635;
+        --accent-soft: rgba(255, 122, 26, 0.12);
+        --accent-line: rgba(255, 122, 26, 0.36);
+        --green-soft: rgba(163, 230, 53, 0.1);
+        --green-line: rgba(163, 230, 53, 0.32);
+        --danger: #ff6b57;
+        --danger-soft: rgba(255, 107, 87, 0.12);
+        --shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+        --radius: 8px;
+        --sans:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", "PingFang SC",
+          "Microsoft YaHei", sans-serif;
+        --mono: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, Consolas, monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--sans);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      button,
+      input,
+      textarea,
+      select {
+        font: inherit;
+      }
+
+      button {
+        cursor: pointer;
+      }
+
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+      }
+
+      .app {
+        height: 100vh;
+        display: grid;
+        grid-template-columns: 286px minmax(0, 1fr) 310px;
+        overflow: hidden;
+      }
+
+      .sidebar {
+        min-width: 0;
+        border-right: 1px solid var(--line);
+        background: #09090b;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .traffic {
+        height: 50px;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 0 18px;
+      }
+
+      .traffic i {
+        width: 12px;
+        height: 12px;
+        border-radius: 999px;
+        display: block;
+      }
+
+      .traffic i:nth-child(1) {
+        background: #ff5f57;
+      }
+
+      .traffic i:nth-child(2) {
+        background: #ffbd2e;
+      }
+
+      .traffic i:nth-child(3) {
+        background: #28c840;
+      }
+
+      .org {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 18px 18px;
+      }
+
+      .org-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        display: grid;
+        place-items: center;
+        background: #615fff;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .org strong {
+        font-size: 15px;
+        font-weight: 650;
+      }
+
+      .nav-list,
+      .section-list {
+        display: grid;
+        gap: 4px;
+        padding: 0 12px;
+      }
+
+      .nav-item,
+      .channel-item,
+      .role-row {
+        min-height: 36px;
+        border: 0;
+        border-radius: var(--radius);
+        background: transparent;
+        color: var(--text-2);
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 0 10px;
+        text-align: left;
+      }
+
+      .nav-item:hover,
+      .channel-item:hover,
+      .role-row:hover {
+        background: var(--surface-2);
+        color: var(--text);
+      }
+
+      .channel-item.active,
+      .role-row.active {
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--text);
+      }
+
+      .channel-item.active {
+        box-shadow: inset 3px 0 0 var(--accent);
+      }
+
+      .section {
+        padding: 18px 0 0;
+      }
+
+      .section-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 18px 8px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .icon-button {
+        width: 28px;
+        height: 28px;
+        border: 1px solid transparent;
+        border-radius: var(--radius);
+        background: transparent;
+        color: var(--muted);
+        display: grid;
+        place-items: center;
+      }
+
+      .icon-button:hover {
+        border-color: var(--line);
+        background: var(--surface-2);
+        color: var(--text);
+      }
+
+      .ai-badge {
+        height: 18px;
+        border: 1px solid rgba(255, 122, 26, 0.42);
+        border-radius: 5px;
+        padding: 0 4px;
+        color: #f2b58b;
+        background: rgba(255, 122, 26, 0.11);
+        font-family: var(--mono);
+        font-size: 10px;
+        line-height: 16px;
+      }
+
+      .role-avatar,
+      .message-avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 7px;
+        display: grid;
+        place-items: center;
+        color: #0b0b0d;
+        background: var(--accent-2);
+        font-weight: 800;
+        font-size: 13px;
+        flex: 0 0 auto;
+      }
+
+      .role-avatar.orange,
+      .message-avatar.orange {
+        background: var(--accent);
+      }
+
+      .role-avatar.blue,
+      .message-avatar.blue {
+        background: #7dd3fc;
+      }
+
+      .role-avatar.pink,
+      .message-avatar.pink {
+        background: #fb7185;
+      }
+
+      .role-row small {
+        margin-left: auto;
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 10px;
+      }
+
+      .profile {
+        margin-top: auto;
+        border-top: 1px solid var(--line);
+        padding: 14px 18px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--text-2);
+      }
+
+      .profile-avatar {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        background: #f59e0b;
+        display: grid;
+        place-items: center;
+        color: #111;
+        font-weight: 800;
+      }
+
+      .workspace {
+        min-width: 0;
+        display: grid;
+        grid-template-rows: 62px minmax(0, 1fr) auto;
+        background: var(--bg);
+      }
+
+      .topbar {
+        min-width: 0;
+        border-bottom: 1px solid var(--line);
+        padding: 0 22px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .channel-title {
+        min-width: 0;
+        flex: 1;
+        display: grid;
+        gap: 2px;
+      }
+
+      .channel-title h1 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: 0;
+      }
+
+      .channel-title p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 12px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .pill {
+        height: 28px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--surface);
+        color: var(--text-2);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0 9px;
+        font-size: 12px;
+      }
+
+      .pill.green {
+        border-color: var(--green-line);
+        color: var(--accent-2);
+        background: var(--green-soft);
+      }
+
+      .pill.orange {
+        border-color: var(--accent-line);
+        color: #ffbe8b;
+        background: var(--accent-soft);
+      }
+
+      .button {
+        height: 34px;
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius);
+        background: var(--surface-2);
+        color: var(--text-2);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        padding: 0 12px;
+        font-weight: 650;
+      }
+
+      .button:hover {
+        border-color: var(--line-strong);
+        background: var(--surface-3);
+        color: var(--text);
+      }
+
+      .button.primary {
+        border-color: var(--accent);
+        background: var(--accent);
+        color: #111;
+      }
+
+      .button.ghost {
+        border-color: transparent;
+        background: transparent;
+      }
+
+      .timeline {
+        min-height: 0;
+        overflow: auto;
+        padding: 24px 26px 18px;
+      }
+
+      .timeline-inner {
+        max-width: 880px;
+        margin: 0 auto;
+        display: grid;
+        gap: 18px;
+      }
+
+      .day-divider {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: var(--disabled);
+        font-family: var(--mono);
+        font-size: 11px;
+      }
+
+      .day-divider::before,
+      .day-divider::after {
+        content: "";
+        height: 1px;
+        flex: 1;
+        background: var(--line);
+      }
+
+      .message {
+        display: grid;
+        grid-template-columns: 34px minmax(0, 1fr);
+        gap: 12px;
+        align-items: start;
+      }
+
+      .message-body {
+        min-width: 0;
+        display: grid;
+        gap: 6px;
+      }
+
+      .message-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 20px;
+      }
+
+      .message-name {
+        font-weight: 700;
+        color: var(--text);
+      }
+
+      .message-time {
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 11px;
+      }
+
+      .message-text {
+        color: var(--text-2);
+        font-size: 14px;
+        line-height: 1.62;
+        white-space: pre-wrap;
+      }
+
+      .message-text .mention {
+        color: #ffbe8b;
+        background: var(--accent-soft);
+        border: 1px solid var(--accent-line);
+        border-radius: 5px;
+        padding: 0 4px;
+      }
+
+      .system-line {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--muted);
+        font-size: 12px;
+        justify-self: center;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 6px 10px;
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .typing span {
+        display: inline-block;
+        width: 5px;
+        height: 5px;
+        margin-right: 4px;
+        border-radius: 999px;
+        background: var(--muted);
+        animation: pulse 1s infinite ease-in-out;
+      }
+
+      .typing span:nth-child(2) {
+        animation-delay: 0.15s;
+      }
+
+      .typing span:nth-child(3) {
+        animation-delay: 0.3s;
+      }
+
+      @keyframes pulse {
+        0%,
+        80%,
+        100% {
+          opacity: 0.25;
+          transform: translateY(0);
+        }
+
+        40% {
+          opacity: 1;
+          transform: translateY(-2px);
+        }
+      }
+
+      .composer-wrap {
+        border-top: 1px solid var(--line);
+        padding: 14px 26px 18px;
+        background: rgba(11, 11, 13, 0.96);
+      }
+
+      .composer {
+        max-width: 880px;
+        margin: 0 auto;
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius);
+        background: var(--surface);
+        position: relative;
+      }
+
+      .composer textarea {
+        width: 100%;
+        min-height: 78px;
+        max-height: 180px;
+        resize: vertical;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: var(--text);
+        padding: 14px 14px 8px;
+        font-size: 14px;
+        line-height: 1.55;
+      }
+
+      .composer textarea::placeholder {
+        color: var(--disabled);
+      }
+
+      .composer-bottom {
+        border-top: 1px solid var(--line);
+        min-height: 42px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 10px;
+      }
+
+      .composer-bottom .hint {
+        margin-left: auto;
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 11px;
+      }
+
+      .mention-menu {
+        position: absolute;
+        left: 12px;
+        bottom: 48px;
+        width: 320px;
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius);
+        background: #18181d;
+        box-shadow: var(--shadow);
+        padding: 6px;
+        display: none;
+        z-index: 20;
+      }
+
+      .mention-menu.open {
+        display: grid;
+        gap: 4px;
+      }
+
+      .mention-option {
+        border: 0;
+        border-radius: 7px;
+        background: transparent;
+        color: var(--text-2);
+        display: grid;
+        grid-template-columns: 28px minmax(0, 1fr);
+        gap: 9px;
+        text-align: left;
+        padding: 8px;
+      }
+
+      .mention-option:hover {
+        background: var(--surface-3);
+        color: var(--text);
+      }
+
+      .mention-option strong {
+        display: block;
+        font-size: 13px;
+      }
+
+      .mention-option span:last-child {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.35;
+      }
+
+      .right-rail {
+        border-left: 1px solid var(--line);
+        background: #09090b;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .rail-head {
+        height: 62px;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 16px;
+      }
+
+      .rail-head strong {
+        font-size: 14px;
+      }
+
+      .member-list {
+        min-height: 0;
+        overflow: auto;
+        padding: 14px;
+        display: grid;
+        align-content: start;
+        gap: 10px;
+      }
+
+      .member-card {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--surface);
+        padding: 12px;
+        display: grid;
+        gap: 10px;
+        text-align: left;
+        color: inherit;
+      }
+
+      .member-card:hover {
+        border-color: var(--line-strong);
+        background: var(--surface-2);
+      }
+
+      .member-head {
+        display: grid;
+        grid-template-columns: 30px minmax(0, 1fr);
+        gap: 10px;
+      }
+
+      .member-name {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .member-name strong {
+        font-size: 14px;
+      }
+
+      .member-meta {
+        color: var(--muted);
+        font-size: 12px;
+        margin-top: 2px;
+      }
+
+      .member-desc {
+        color: var(--text-2);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .tag-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .tag {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        color: var(--muted);
+        padding: 2px 7px;
+        font-family: var(--mono);
+        font-size: 10px;
+      }
+
+      .empty-state {
+        border: 1px dashed var(--line-strong);
+        border-radius: var(--radius);
+        padding: 18px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      .overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        display: none;
+        background: rgba(0, 0, 0, 0.6);
+      }
+
+      .overlay.open {
+        display: grid;
+        place-items: center;
+      }
+
+      .modal {
+        width: min(980px, calc(100vw - 48px));
+        max-height: calc(100vh - 48px);
+        border: 1px solid var(--line-strong);
+        border-radius: 10px;
+        background: var(--surface);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+      }
+
+      .modal.small {
+        width: min(760px, calc(100vw - 48px));
+      }
+
+      .modal-head {
+        min-height: 64px;
+        border-bottom: 1px solid var(--line);
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .modal-title {
+        display: grid;
+        gap: 4px;
+      }
+
+      .modal-title h2 {
+        margin: 0;
+        font-size: 19px;
+      }
+
+      .modal-title p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .modal-body {
+        min-height: 0;
+        overflow: auto;
+        padding: 20px;
+      }
+
+      .modal-foot {
+        border-top: 1px solid var(--line);
+        min-height: 62px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+        padding: 12px 20px;
+      }
+
+      .field {
+        display: grid;
+        gap: 7px;
+        margin-bottom: 16px;
+      }
+
+      .field label {
+        color: var(--text-2);
+        font-size: 13px;
+        font-weight: 650;
+      }
+
+      .field small {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .field input,
+      .field textarea,
+      .field select {
+        width: 100%;
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius);
+        background: var(--bg);
+        color: var(--text);
+        padding: 10px 11px;
+        outline: 0;
+      }
+
+      .field input:focus,
+      .field textarea:focus,
+      .field select:focus {
+        border-color: var(--accent);
+      }
+
+      .field textarea {
+        min-height: 92px;
+        resize: vertical;
+      }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 14px;
+      }
+
+      .folder-picker {
+        display: grid;
+        gap: 8px;
+      }
+
+      .folder-option,
+      .role-check,
+      .template-card,
+      .channel-check {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--surface-2);
+        color: var(--text-2);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 11px;
+        text-align: left;
+      }
+
+      .folder-option.active,
+      .role-check.active,
+      .template-card.active,
+      .channel-check.active {
+        border-color: var(--accent);
+        background: var(--accent-soft);
+        color: var(--text);
+      }
+
+      .folder-copy,
+      .check-copy {
+        display: grid;
+        gap: 2px;
+      }
+
+      .folder-copy strong,
+      .check-copy strong {
+        font-size: 13px;
+      }
+
+      .folder-copy span,
+      .check-copy span {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .checkbox {
+        width: 18px;
+        height: 18px;
+        border: 1px solid var(--line-strong);
+        border-radius: 5px;
+        display: grid;
+        place-items: center;
+        color: #111;
+        background: transparent;
+        flex: 0 0 auto;
+      }
+
+      .active .checkbox {
+        background: var(--accent);
+        border-color: var(--accent);
+      }
+
+      .step-shell {
+        display: grid;
+        grid-template-columns: 210px minmax(0, 1fr);
+        min-height: 520px;
+      }
+
+      .stepper {
+        border-right: 1px solid var(--line);
+        padding: 20px;
+        display: grid;
+        align-content: start;
+        gap: 18px;
+      }
+
+      .step {
+        display: grid;
+        grid-template-columns: 34px minmax(0, 1fr);
+        gap: 10px;
+        color: var(--muted);
+      }
+
+      .step-index {
+        width: 30px;
+        height: 30px;
+        border-radius: 999px;
+        border: 1px solid var(--line-strong);
+        display: grid;
+        place-items: center;
+        font-family: var(--mono);
+      }
+
+      .step.active {
+        color: var(--text);
+      }
+
+      .step.active .step-index {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      .step strong {
+        display: block;
+        font-size: 13px;
+        margin-bottom: 3px;
+      }
+
+      .step span {
+        font-size: 12px;
+        line-height: 1.4;
+      }
+
+      .step-content {
+        padding: 20px;
+        overflow: auto;
+      }
+
+      .template-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .template-card {
+        min-height: 112px;
+        align-items: flex-start;
+      }
+
+      .template-card h3 {
+        margin: 0 0 7px;
+        font-size: 14px;
+      }
+
+      .template-card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .drawer {
+        position: fixed;
+        inset: 0 0 0 auto;
+        width: min(560px, 100vw);
+        z-index: 50;
+        border-left: 1px solid var(--line-strong);
+        background: var(--surface);
+        box-shadow: var(--shadow);
+        transform: translateX(105%);
+        transition: transform 180ms cubic-bezier(0.4, 0, 0.2, 1);
+        display: grid;
+        grid-template-rows: auto auto minmax(0, 1fr);
+      }
+
+      .drawer.open {
+        transform: translateX(0);
+      }
+
+      .drawer-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 49;
+        display: none;
+        background: rgba(0, 0, 0, 0.4);
+      }
+
+      .drawer-backdrop.open {
+        display: block;
+      }
+
+      .drawer-head {
+        padding: 18px;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        justify-content: space-between;
+        gap: 14px;
+      }
+
+      .role-hero {
+        display: grid;
+        grid-template-columns: 54px minmax(0, 1fr);
+        gap: 14px;
+      }
+
+      .role-hero .role-avatar {
+        width: 54px;
+        height: 54px;
+        border-radius: 12px;
+        font-size: 20px;
+      }
+
+      .role-hero h2 {
+        margin: 0 0 5px;
+        font-size: 22px;
+      }
+
+      .role-hero p {
+        margin: 8px 0 0;
+        color: var(--text-2);
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      .tabs {
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        gap: 4px;
+        padding: 0 18px;
+      }
+
+      .tab {
+        height: 42px;
+        border: 0;
+        border-bottom: 2px solid transparent;
+        background: transparent;
+        color: var(--muted);
+        padding: 0 12px;
+        font-weight: 650;
+      }
+
+      .tab.active {
+        border-color: var(--accent);
+        color: var(--text);
+      }
+
+      .drawer-body {
+        min-height: 0;
+        overflow: auto;
+        padding: 18px;
+      }
+
+      .role-chat {
+        display: grid;
+        grid-template-rows: minmax(0, 1fr) auto;
+        height: 100%;
+        gap: 12px;
+      }
+
+      .role-chat-log {
+        min-height: 260px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 12px;
+        background: var(--bg);
+        display: grid;
+        align-content: start;
+        gap: 12px;
+      }
+
+      .mini-message {
+        display: grid;
+        gap: 4px;
+        font-size: 13px;
+        color: var(--text-2);
+        line-height: 1.55;
+      }
+
+      .mini-message strong {
+        color: var(--text);
+      }
+
+      .role-chat-input {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 8px;
+      }
+
+      .role-chat-input input {
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius);
+        background: var(--bg);
+        color: var(--text);
+        padding: 0 11px;
+      }
+
+      .settings-grid {
+        display: grid;
+        gap: 16px;
+      }
+
+      .danger-zone {
+        border: 1px solid rgba(255, 107, 87, 0.45);
+        border-radius: var(--radius);
+        background: var(--danger-soft);
+        padding: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .danger-zone strong {
+        color: #ffb3a8;
+      }
+
+      .danger-zone span {
+        display: block;
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .toast {
+        position: fixed;
+        right: 18px;
+        bottom: 18px;
+        z-index: 80;
+        display: none;
+        max-width: 360px;
+        border: 1px solid var(--green-line);
+        border-radius: var(--radius);
+        background: #14210d;
+        color: var(--text);
+        box-shadow: var(--shadow);
+        padding: 12px 14px;
+        font-size: 13px;
+      }
+
+      .toast.open {
+        display: block;
+      }
+
+      @media (max-width: 1180px) {
+        .app {
+          grid-template-columns: 250px minmax(0, 1fr);
+        }
+
+        .right-rail {
+          display: none;
+        }
+      }
+
+      @media (max-width: 760px) {
+        .app {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          display: none;
+        }
+
+        .form-grid,
+        .step-shell,
+        .template-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .stepper {
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar">
+        <div class="traffic"><i></i><i></i><i></i></div>
+        <div class="org">
+          <div class="org-icon">D</div>
+          <strong>Morrow Workspace</strong>
+        </div>
+        <div class="nav-list">
+          <button class="nav-item" type="button">收件箱</button>
+          <button class="nav-item" type="button">任务</button>
+          <button class="nav-item" type="button">项目</button>
+        </div>
+        <section class="section">
+          <div class="section-head">
+            <span>频道</span>
+            <button class="icon-button" type="button" id="new-channel-entry" title="新建频道">
+              +
+            </button>
+          </div>
+          <div class="section-list" id="channel-list"></div>
+        </section>
+        <section class="section">
+          <div class="section-head">
+            <span>AI 队友</span>
+            <button class="icon-button" type="button" id="new-role-entry" title="新建角色">
+              +
+            </button>
+          </div>
+          <div class="section-list" id="role-list"></div>
+        </section>
+        <div class="profile">
+          <div class="profile-avatar">S</div>
+          <div>
+            <div>stephen s</div>
+            <small style="color: var(--muted)">online</small>
+          </div>
+        </div>
+      </aside>
+
+      <main class="workspace">
+        <header class="topbar">
+          <div class="channel-title">
+            <h1 id="channel-title">#general</h1>
+            <p id="channel-subtitle">未绑定文件夹</p>
+          </div>
+          <span class="pill green" id="runtime-pill">Claude Code</span>
+          <button class="button" type="button" id="invite-role-button">添加角色</button>
+          <button class="button primary" type="button" id="new-channel-top">新建频道</button>
+        </header>
+
+        <section class="timeline" id="timeline">
+          <div class="timeline-inner" id="message-list"></div>
+        </section>
+
+        <section class="composer-wrap">
+          <div class="composer">
+            <div class="mention-menu" id="mention-menu"></div>
+            <textarea
+              id="composer-input"
+              placeholder="@设计师 帮我看下这个频道的首页应该怎么组织"
+            ></textarea>
+            <div class="composer-bottom">
+              <button class="button ghost" type="button" id="quick-designer">@设计师</button>
+              <button class="button ghost" type="button" id="quick-engineer">@工程师</button>
+              <span class="hint">Enter 发送 · @角色触发回复</span>
+              <button class="button primary" type="button" id="send-button">发送</button>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <aside class="right-rail">
+        <div class="rail-head">
+          <strong>频道成员</strong>
+          <button class="icon-button" type="button" id="add-member-button">+</button>
+        </div>
+        <div class="member-list" id="member-list"></div>
+      </aside>
+    </div>
+
+    <div class="overlay" id="channel-modal">
+      <form class="modal small" id="channel-form">
+        <header class="modal-head">
+          <div class="modal-title">
+            <h2>新建频道</h2>
+            <p>创建一个绑定项目文件夹的工作房间，把合适的 AI 队友拉进来。</p>
+          </div>
+          <button class="icon-button" type="button" data-close="channel-modal">×</button>
+        </header>
+        <div class="modal-body">
+          <div class="field">
+            <label for="channel-name">频道名称</label>
+            <input id="channel-name" name="name" value="design-review" required />
+            <small>建议用短横线命名，例如 design-review、release-room。</small>
+          </div>
+          <div class="field">
+            <label for="channel-description">描述</label>
+            <textarea id="channel-description" name="description">
+用于讨论界面方案、角色反馈和设计验收。</textarea
+            >
+          </div>
+          <div class="field">
+            <label>绑定文件夹</label>
+            <div class="folder-picker" id="folder-options"></div>
+          </div>
+          <div class="field">
+            <label>初始 AI 成员</label>
+            <div class="folder-picker" id="channel-role-options"></div>
+          </div>
+        </div>
+        <footer class="modal-foot">
+          <button class="button" type="button" data-close="channel-modal">取消</button>
+          <button class="button primary" type="submit">创建频道</button>
+        </footer>
+      </form>
+    </div>
+
+    <div class="overlay" id="role-modal">
+      <div class="modal">
+        <header class="modal-head">
+          <div class="modal-title">
+            <h2>新建 AI 角色</h2>
+            <p>先选模板，再改身份，最后选择加入哪些频道。</p>
+          </div>
+          <button class="icon-button" type="button" data-close="role-modal">×</button>
+        </header>
+        <div class="modal-body" style="padding: 0">
+          <div class="step-shell">
+            <aside class="stepper">
+              <div class="step active" data-step-label="1">
+                <div class="step-index">1</div>
+                <div><strong>模板</strong><span>选一个起点</span></div>
+              </div>
+              <div class="step" data-step-label="2">
+                <div class="step-index">2</div>
+                <div><strong>身份</strong><span>名字、简介、模型</span></div>
+              </div>
+              <div class="step" data-step-label="3">
+                <div class="step-index">3</div>
+                <div><strong>加入频道</strong><span>选择可被 @ 的地方</span></div>
+              </div>
+            </aside>
+            <main class="step-content" id="role-step-content"></main>
+          </div>
+        </div>
+        <footer class="modal-foot">
+          <button class="button" type="button" id="role-back">上一步</button>
+          <button class="button primary" type="button" id="role-next">下一步</button>
+        </footer>
+      </div>
+    </div>
+
+    <div class="drawer-backdrop" id="drawer-backdrop"></div>
+    <aside class="drawer" id="role-drawer">
+      <header class="drawer-head">
+        <div class="role-hero" id="role-hero"></div>
+        <button class="icon-button" type="button" id="drawer-close">×</button>
+      </header>
+      <div class="tabs">
+        <button class="tab active" type="button" data-role-tab="chat">Chat</button>
+        <button class="tab" type="button" data-role-tab="settings">Settings</button>
+      </div>
+      <main class="drawer-body" id="drawer-body"></main>
+    </aside>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+      const projects = [
+        { id: "morrow", name: "Morrow", path: "/Users/songhuiyu/Morrow" },
+        { id: "opencove", name: "OpenCove", path: "/Users/songhuiyu/OpenCove" },
+        { id: "none", name: "暂不绑定", path: "无项目文件夹" },
+      ];
+
+      const templates = [
+        {
+          key: "designer",
+          name: "设计师",
+          short: "DS",
+          kind: "设计",
+          runtime: "Claude",
+          color: "orange",
+          description: "负责信息架构、界面布局、视觉稿、交互状态。",
+          capabilities: ["ui", "ux", "prototype", "visual"],
+        },
+        {
+          key: "engineer",
+          name: "工程师",
+          short: "EN",
+          kind: "工程",
+          runtime: "Codex",
+          color: "blue",
+          description: "负责实现路径、代码改动、测试和调试。",
+          capabilities: ["code", "test", "debug", "refactor"],
+        },
+        {
+          key: "pm",
+          name: "产品经理",
+          short: "PM",
+          kind: "产品",
+          runtime: "Claude",
+          color: "pink",
+          description: "负责目标澄清、需求拆解、验收口径和优先级。",
+          capabilities: ["scope", "prd", "acceptance", "priority"],
+        },
+        {
+          key: "blank",
+          name: "空白角色",
+          short: "AI",
+          kind: "自定义",
+          runtime: "Claude",
+          color: "",
+          description: "从一个空白 AI 同事开始配置。",
+          capabilities: ["custom"],
+        },
+      ];
+
+      const state = {
+        activeChannelId: "general",
+        selectedFolderId: "morrow",
+        selectedRoleId: null,
+        drawerTab: "chat",
+        channels: [
+          {
+            id: "general",
+            name: "general",
+            description: "默认频道，用来放临时讨论。",
+            folderId: "morrow",
+            memberRoleIds: ["designer", "engineer"],
+            messages: [
+              { type: "system", text: "#general 已绑定 /Users/songhuiyu/Morrow" },
+              {
+                type: "user",
+                author: "stephen s",
+                text: "@设计师 我想把频道、角色和聊天的基础体验重新做顺。",
+                time: "14:18",
+              },
+              {
+                type: "role",
+                roleId: "designer",
+                text:
+                  "我建议先把频道做成聊天主界面：左侧负责导航，中间只保留消息流，右侧只显示成员。创建频道和创建角色都用独立流程，不要塞在同一个面板里。",
+                time: "14:19",
+              },
+            ],
+          },
+        ],
+        roles: [
+          {
+            id: "designer",
+            name: "设计师",
+            short: "DS",
+            kind: "设计",
+            runtime: "Claude",
+            color: "orange",
+            description: "负责信息架构、界面布局、视觉稿、交互状态。",
+            capabilities: ["ui", "ux", "prototype", "visual"],
+            channels: ["general"],
+            privateMessages: [
+              {
+                from: "role",
+                text: "我会从信息架构、交互流程和视觉层级三个角度看问题。",
+              },
+            ],
+          },
+          {
+            id: "engineer",
+            name: "工程师",
+            short: "EN",
+            kind: "工程",
+            runtime: "Codex",
+            color: "blue",
+            description: "负责实现路径、代码改动、测试和调试。",
+            capabilities: ["code", "test", "debug", "refactor"],
+            channels: ["general"],
+            privateMessages: [
+              {
+                from: "role",
+                text: "我会优先看状态 owner、IPC 边界、可验证的最小改动。",
+              },
+            ],
+          },
+          {
+            id: "pm",
+            name: "产品经理",
+            short: "PM",
+            kind: "产品",
+            runtime: "Claude",
+            color: "pink",
+            description: "负责目标澄清、需求拆解、验收口径和优先级。",
+            capabilities: ["scope", "prd", "acceptance", "priority"],
+            channels: [],
+            privateMessages: [],
+          },
+        ],
+        roleDraft: null,
+        roleStep: 1,
+      };
+
+      const $ = (selector) => document.querySelector(selector);
+
+      function activeChannel() {
+        return state.channels.find((channel) => channel.id === state.activeChannelId);
+      }
+
+      function roleById(id) {
+        return state.roles.find((role) => role.id === id);
+      }
+
+      function projectById(id) {
+        return projects.find((project) => project.id === id) || projects[0];
+      }
+
+      function nowTime() {
+        const d = new Date();
+        return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;");
+      }
+
+      function formatMentions(text) {
+        let next = escapeHtml(text);
+        for (const role of state.roles) {
+          const keys = [role.name, role.short].filter(Boolean);
+          for (const key of keys) {
+            next = next.replaceAll(`@${escapeHtml(key)}`, `<span class="mention">@${escapeHtml(key)}</span>`);
+          }
+        }
+        return next;
+      }
+
+      function showToast(text) {
+        const toast = $("#toast");
+        toast.textContent = text;
+        toast.classList.add("open");
+        clearTimeout(showToast.timer);
+        showToast.timer = setTimeout(() => toast.classList.remove("open"), 2200);
+      }
+
+      function openModal(id) {
+        document.getElementById(id).classList.add("open");
+      }
+
+      function closeModal(id) {
+        document.getElementById(id).classList.remove("open");
+      }
+
+      function renderSidebar() {
+        const channelList = $("#channel-list");
+        channelList.innerHTML = state.channels
+          .map(
+            (channel) => `
+              <button class="channel-item ${channel.id === state.activeChannelId ? "active" : ""}" type="button" data-channel-id="${channel.id}">
+                <span>#</span>
+                <span>${escapeHtml(channel.name)}</span>
+              </button>
+            `,
+          )
+          .join("");
+        channelList.querySelectorAll("[data-channel-id]").forEach((button) => {
+          button.addEventListener("click", () => {
+            state.activeChannelId = button.dataset.channelId;
+            render();
+          });
+        });
+
+        const roleList = $("#role-list");
+        roleList.innerHTML = state.roles
+          .map(
+            (role) => `
+              <button class="role-row" type="button" data-role-id="${role.id}">
+                <span class="role-avatar ${role.color}">${escapeHtml(role.short)}</span>
+                <span>${escapeHtml(role.name)}</span>
+                <span class="ai-badge">AI</span>
+                <small>${role.channels.length}</small>
+              </button>
+            `,
+          )
+          .join("");
+        roleList.querySelectorAll("[data-role-id]").forEach((button) => {
+          button.addEventListener("click", () => openRoleDrawer(button.dataset.roleId));
+        });
+      }
+
+      function renderHeader() {
+        const channel = activeChannel();
+        const project = projectById(channel.folderId);
+        $("#channel-title").textContent = `#${channel.name}`;
+        $("#channel-subtitle").textContent =
+          project.id === "none" ? "未绑定文件夹" : `绑定文件夹 · ${project.path}`;
+      }
+
+      function renderMessages() {
+        const channel = activeChannel();
+        const list = $("#message-list");
+        list.innerHTML = `<div class="day-divider">Today</div>`;
+        for (const message of channel.messages) {
+          if (message.type === "system") {
+            list.insertAdjacentHTML(
+              "beforeend",
+              `<div class="system-line">${escapeHtml(message.text)}</div>`,
+            );
+            continue;
+          }
+          if (message.type === "typing") {
+            const role = roleById(message.roleId);
+            list.insertAdjacentHTML(
+              "beforeend",
+              `
+                <article class="message">
+                  <button class="message-avatar ${role.color}" type="button" data-role-id="${role.id}">${escapeHtml(role.short)}</button>
+                  <div class="message-body">
+                    <div class="message-head">
+                      <span class="message-name">${escapeHtml(role.name)}</span>
+                      <span class="ai-badge">AI</span>
+                      <span class="message-time">正在输入</span>
+                    </div>
+                    <div class="message-text typing"><span></span><span></span><span></span></div>
+                  </div>
+                </article>
+              `,
+            );
+            continue;
+          }
+          if (message.type === "role") {
+            const role = roleById(message.roleId);
+            list.insertAdjacentHTML(
+              "beforeend",
+              `
+                <article class="message">
+                  <button class="message-avatar ${role.color}" type="button" data-role-id="${role.id}" title="查看角色">${escapeHtml(role.short)}</button>
+                  <div class="message-body">
+                    <div class="message-head">
+                      <span class="message-name">${escapeHtml(role.name)}</span>
+                      <span class="ai-badge">AI</span>
+                      <span class="message-time">${message.time}</span>
+                    </div>
+                    <div class="message-text">${formatMentions(message.text)}</div>
+                  </div>
+                </article>
+              `,
+            );
+            continue;
+          }
+          list.insertAdjacentHTML(
+            "beforeend",
+            `
+              <article class="message">
+                <div class="message-avatar">S</div>
+                <div class="message-body">
+                  <div class="message-head">
+                    <span class="message-name">${escapeHtml(message.author)}</span>
+                    <span class="message-time">${message.time}</span>
+                  </div>
+                  <div class="message-text">${formatMentions(message.text)}</div>
+                </div>
+              </article>
+            `,
+          );
+        }
+        list.querySelectorAll("[data-role-id]").forEach((button) => {
+          button.addEventListener("click", () => openRoleDrawer(button.dataset.roleId));
+        });
+        $("#timeline").scrollTop = $("#timeline").scrollHeight;
+      }
+
+      function renderMembers() {
+        const channel = activeChannel();
+        const members = channel.memberRoleIds.map(roleById).filter(Boolean);
+        const list = $("#member-list");
+        if (members.length === 0) {
+          list.innerHTML = `
+            <div class="empty-state">
+              这个频道还没有 AI 队友。点击右上角 + 添加角色，或新建一个角色。
+            </div>
+          `;
+          return;
+        }
+        list.innerHTML = members
+          .map(
+            (role) => `
+              <button class="member-card" type="button" data-role-id="${role.id}">
+                <div class="member-head">
+                  <span class="role-avatar ${role.color}">${escapeHtml(role.short)}</span>
+                  <span>
+                    <span class="member-name"><strong>${escapeHtml(role.name)}</strong><span class="ai-badge">AI</span></span>
+                    <span class="member-meta">${escapeHtml(role.kind)} · ${escapeHtml(role.runtime)}</span>
+                  </span>
+                </div>
+                <span class="member-desc">${escapeHtml(role.description)}</span>
+                <span class="tag-row">
+                  ${role.capabilities.slice(0, 4).map((cap) => `<span class="tag">${escapeHtml(cap)}</span>`).join("")}
+                </span>
+              </button>
+            `,
+          )
+          .join("");
+        list.querySelectorAll("[data-role-id]").forEach((button) => {
+          button.addEventListener("click", () => openRoleDrawer(button.dataset.roleId));
+        });
+      }
+
+      function render() {
+        renderSidebar();
+        renderHeader();
+        renderMessages();
+        renderMembers();
+      }
+
+      function roleMatchesFromText(text) {
+        const channel = activeChannel();
+        const members = channel.memberRoleIds.map(roleById).filter(Boolean);
+        return members.filter((role) => {
+          const keys = [role.name, role.short, ...role.capabilities];
+          return keys.some((key) => text.toLowerCase().includes(`@${key.toLowerCase()}`));
+        });
+      }
+
+      function replyFor(role, text) {
+        if (role.id.includes("designer") || role.kind === "设计") {
+          return "我会先把这个频道做成真正的聊天工作台：消息流是主角，角色和文件夹只是上下文。MVP 里建议先保证三个动作顺：新建频道、拉角色进频道、在频道里 @ 角色得到稳定回复。";
+        }
+        if (role.id.includes("engineer") || role.kind === "工程") {
+          return "实现上建议把 Channel、Role、Membership、Message 四个对象先收紧。频道绑定文件夹只存 projectId/path 引用，角色回复走一条明确的 run 记录，但 UI 上不要暴露成调试事件。";
+        }
+        if (role.kind === "产品") {
+          return "这个 MVP 的验收标准应该很窄：用户能创建绑定文件夹的频道，创建一个角色，把角色加入频道，并完成一次 @ 对话。其他任务、记忆、handoff 都先不要抢主线。";
+        }
+        return "我会基于自己的角色能力给出具体建议。当前最重要的是让频道聊天、角色身份和创建流程形成一个闭环。";
+      }
+
+      function sendChannelMessage() {
+        const input = $("#composer-input");
+        const text = input.value.trim();
+        if (!text) return;
+        const channel = activeChannel();
+        channel.messages.push({ type: "user", author: "stephen s", text, time: nowTime() });
+        input.value = "";
+        closeMentionMenu();
+        const targets = roleMatchesFromText(text);
+        if (targets.length === 0) {
+          channel.messages.push({ type: "system", text: "没有 @ 到频道成员。试试 @设计师 或 @工程师。" });
+          render();
+          return;
+        }
+        for (const role of targets) {
+          channel.messages.push({ type: "typing", roleId: role.id });
+        }
+        render();
+        setTimeout(() => {
+          channel.messages = channel.messages.filter((message) => message.type !== "typing");
+          for (const role of targets) {
+            channel.messages.push({
+              type: "role",
+              roleId: role.id,
+              text: replyFor(role, text),
+              time: nowTime(),
+            });
+          }
+          render();
+        }, 650);
+      }
+
+      function renderFolderOptions() {
+        $("#folder-options").innerHTML = projects
+          .map(
+            (project) => `
+              <button class="folder-option ${project.id === state.selectedFolderId ? "active" : ""}" type="button" data-folder-id="${project.id}">
+                <span class="checkbox">${project.id === state.selectedFolderId ? "✓" : ""}</span>
+                <span class="folder-copy">
+                  <strong>${escapeHtml(project.name)}</strong>
+                  <span>${escapeHtml(project.path)}</span>
+                </span>
+              </button>
+            `,
+          )
+          .join("");
+        $("#folder-options").querySelectorAll("[data-folder-id]").forEach((button) => {
+          button.addEventListener("click", () => {
+            state.selectedFolderId = button.dataset.folderId;
+            renderFolderOptions();
+          });
+        });
+      }
+
+      function renderChannelRoleOptions() {
+        const selected = new Set(["designer", "engineer"]);
+        $("#channel-role-options").innerHTML = state.roles
+          .map(
+            (role) => `
+              <button class="role-check ${selected.has(role.id) ? "active" : ""}" type="button" data-channel-role-id="${role.id}">
+                <span class="checkbox">${selected.has(role.id) ? "✓" : ""}</span>
+                <span class="role-avatar ${role.color}">${escapeHtml(role.short)}</span>
+                <span class="check-copy">
+                  <strong>${escapeHtml(role.name)}</strong>
+                  <span>${escapeHtml(role.description)}</span>
+                </span>
+              </button>
+            `,
+          )
+          .join("");
+        $("#channel-role-options").querySelectorAll("[data-channel-role-id]").forEach((button) => {
+          button.addEventListener("click", () => {
+            button.classList.toggle("active");
+            button.querySelector(".checkbox").textContent = button.classList.contains("active") ? "✓" : "";
+          });
+        });
+      }
+
+      function submitChannelForm(event) {
+        event.preventDefault();
+        const form = event.currentTarget;
+        const name = form.name.value.trim().replace(/^#/, "") || "new-channel";
+        const id = `${name}-${Date.now().toString(36)}`;
+        const selectedRoles = Array.from(
+          $("#channel-role-options").querySelectorAll(".role-check.active"),
+        ).map((button) => button.dataset.channelRoleId);
+        state.channels.push({
+          id,
+          name,
+          description: form.description.value.trim(),
+          folderId: state.selectedFolderId,
+          memberRoleIds: selectedRoles,
+          messages: [
+            {
+              type: "system",
+              text: `#${name} 已创建，绑定 ${projectById(state.selectedFolderId).path}`,
+            },
+          ],
+        });
+        for (const roleId of selectedRoles) {
+          const role = roleById(roleId);
+          if (role && !role.channels.includes(id)) role.channels.push(id);
+        }
+        state.activeChannelId = id;
+        closeModal("channel-modal");
+        render();
+        showToast(`频道 #${name} 已创建`);
+      }
+
+      function openChannelModal() {
+        renderFolderOptions();
+        renderChannelRoleOptions();
+        openModal("channel-modal");
+        setTimeout(() => $("#channel-name").focus(), 30);
+      }
+
+      function openRoleWizard() {
+        state.roleStep = 1;
+        state.roleDraft = { ...templates[0], selectedChannels: [state.activeChannelId] };
+        renderRoleWizard();
+        openModal("role-modal");
+      }
+
+      function renderRoleWizard() {
+        document.querySelectorAll("[data-step-label]").forEach((step) => {
+          step.classList.toggle("active", Number(step.dataset.stepLabel) === state.roleStep);
+        });
+        $("#role-back").disabled = state.roleStep === 1;
+        $("#role-next").textContent = state.roleStep === 3 ? "创建角色" : "下一步";
+        if (state.roleStep === 1) renderRoleStepTemplate();
+        if (state.roleStep === 2) renderRoleStepIdentity();
+        if (state.roleStep === 3) renderRoleStepChannels();
+      }
+
+      function renderRoleStepTemplate() {
+        $("#role-step-content").innerHTML = `
+          <div class="field">
+            <label>选择一个角色模板</label>
+            <small>模板只提供初始身份和默认能力，后续可以继续调整。</small>
+          </div>
+          <div class="template-grid">
+            ${templates
+              .map(
+                (template) => `
+                  <button class="template-card ${state.roleDraft.key === template.key ? "active" : ""}" type="button" data-template-key="${template.key}">
+                    <span class="role-avatar ${template.color}">${escapeHtml(template.short)}</span>
+                    <span>
+                      <h3>${escapeHtml(template.name)}</h3>
+                      <p>${escapeHtml(template.description)}</p>
+                    </span>
+                  </button>
+                `,
+              )
+              .join("")}
+          </div>
+        `;
+        $("#role-step-content").querySelectorAll("[data-template-key]").forEach((button) => {
+          button.addEventListener("click", () => {
+            const template = templates.find((item) => item.key === button.dataset.templateKey);
+            state.roleDraft = { ...template, selectedChannels: [state.activeChannelId] };
+            renderRoleWizard();
+          });
+        });
+      }
+
+      function renderRoleStepIdentity() {
+        const draft = state.roleDraft;
+        $("#role-step-content").innerHTML = `
+          <div class="form-grid">
+            <div class="field">
+              <label for="role-name">显示名称</label>
+              <input id="role-name" value="${escapeHtml(draft.name)}" />
+            </div>
+            <div class="field">
+              <label for="role-runtime">默认模型</label>
+              <select id="role-runtime">
+                <option ${draft.runtime === "Claude" ? "selected" : ""}>Claude</option>
+                <option ${draft.runtime === "Codex" ? "selected" : ""}>Codex</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label for="role-desc">简介</label>
+            <textarea id="role-desc">${escapeHtml(draft.description)}</textarea>
+            <small>这会显示在角色详情页和频道成员列表里。</small>
+          </div>
+          <div class="field">
+            <label for="role-caps">能力标签</label>
+            <input id="role-caps" value="${escapeHtml(draft.capabilities.join(", "))}" />
+          </div>
+        `;
+      }
+
+      function saveRoleIdentityStep() {
+        if (state.roleStep !== 2) return;
+        state.roleDraft.name = $("#role-name").value.trim() || state.roleDraft.name;
+        state.roleDraft.runtime = $("#role-runtime").value;
+        state.roleDraft.description = $("#role-desc").value.trim();
+        state.roleDraft.capabilities = $("#role-caps").value
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean);
+        state.roleDraft.short = state.roleDraft.name.slice(0, 2).toUpperCase();
+      }
+
+      function renderRoleStepChannels() {
+        const selected = new Set(state.roleDraft.selectedChannels || []);
+        $("#role-step-content").innerHTML = `
+          <div class="field">
+            <label>选择加入频道</label>
+            <small>加入后，这个角色会出现在频道成员里，并且可以被 @。</small>
+          </div>
+          <div class="folder-picker">
+            ${state.channels
+              .map(
+                (channel) => `
+                  <button class="channel-check ${selected.has(channel.id) ? "active" : ""}" type="button" data-select-channel="${channel.id}">
+                    <span class="checkbox">${selected.has(channel.id) ? "✓" : ""}</span>
+                    <span class="check-copy">
+                      <strong>#${escapeHtml(channel.name)}</strong>
+                      <span>${escapeHtml(projectById(channel.folderId).path)}</span>
+                    </span>
+                  </button>
+                `,
+              )
+              .join("")}
+          </div>
+        `;
+        $("#role-step-content").querySelectorAll("[data-select-channel]").forEach((button) => {
+          button.addEventListener("click", () => {
+            const set = new Set(state.roleDraft.selectedChannels || []);
+            if (set.has(button.dataset.selectChannel)) set.delete(button.dataset.selectChannel);
+            else set.add(button.dataset.selectChannel);
+            state.roleDraft.selectedChannels = Array.from(set);
+            renderRoleStepChannels();
+          });
+        });
+      }
+
+      function createRoleFromDraft() {
+        saveRoleIdentityStep();
+        const id = `${state.roleDraft.key}-${Date.now().toString(36)}`;
+        const channels = state.roleDraft.selectedChannels || [state.activeChannelId];
+        const role = {
+          id,
+          name: state.roleDraft.name,
+          short: state.roleDraft.short || state.roleDraft.name.slice(0, 2).toUpperCase(),
+          kind: state.roleDraft.kind,
+          runtime: state.roleDraft.runtime,
+          color: state.roleDraft.color,
+          description: state.roleDraft.description,
+          capabilities: state.roleDraft.capabilities,
+          channels: [...channels],
+          privateMessages: [
+            {
+              from: "role",
+              text: `我是 ${state.roleDraft.name}，可以在频道里被 @，也可以在这里先测试我的回复风格。`,
+            },
+          ],
+        };
+        state.roles.push(role);
+        for (const channelId of channels) {
+          const channel = state.channels.find((item) => item.id === channelId);
+          if (channel && !channel.memberRoleIds.includes(role.id)) {
+            channel.memberRoleIds.push(role.id);
+            channel.messages.push({ type: "system", text: `${role.name} 已加入频道。` });
+          }
+        }
+        closeModal("role-modal");
+        render();
+        openRoleDrawer(role.id);
+        showToast(`${role.name} 已创建`);
+      }
+
+      function openRoleDrawer(roleId) {
+        state.selectedRoleId = roleId;
+        state.drawerTab = "chat";
+        renderRoleDrawer();
+        $("#drawer-backdrop").classList.add("open");
+        $("#role-drawer").classList.add("open");
+      }
+
+      function closeRoleDrawer() {
+        $("#drawer-backdrop").classList.remove("open");
+        $("#role-drawer").classList.remove("open");
+      }
+
+      function renderRoleDrawer() {
+        const role = roleById(state.selectedRoleId);
+        if (!role) return;
+        $("#role-hero").innerHTML = `
+          <span class="role-avatar ${role.color}">${escapeHtml(role.short)}</span>
+          <span>
+            <h2>${escapeHtml(role.name)} <span class="ai-badge">AI</span></h2>
+            <span class="pill">${escapeHtml(role.kind)} · ${escapeHtml(role.runtime)}</span>
+            <p>${escapeHtml(role.description)}</p>
+          </span>
+        `;
+        document.querySelectorAll("[data-role-tab]").forEach((tab) => {
+          tab.classList.toggle("active", tab.dataset.roleTab === state.drawerTab);
+        });
+        if (state.drawerTab === "chat") renderRoleChat(role);
+        else renderRoleSettings(role);
+      }
+
+      function renderRoleChat(role) {
+        $("#drawer-body").innerHTML = `
+          <div class="role-chat">
+            <div class="role-chat-log" id="role-chat-log">
+              ${(role.privateMessages || [])
+                .map(
+                  (message) => `
+                    <div class="mini-message">
+                      <strong>${message.from === "user" ? "你" : escapeHtml(role.name)}</strong>
+                      <span>${escapeHtml(message.text)}</span>
+                    </div>
+                  `,
+                )
+                .join("")}
+            </div>
+            <div class="role-chat-input">
+              <input id="role-private-input" placeholder="测试这个角色的回复风格" />
+              <button class="button primary" type="button" id="role-private-send">发送</button>
+            </div>
+          </div>
+        `;
+        $("#role-private-send").addEventListener("click", () => {
+          const input = $("#role-private-input");
+          const text = input.value.trim();
+          if (!text) return;
+          role.privateMessages.push({ from: "user", text });
+          role.privateMessages.push({ from: "role", text: replyFor(role, text) });
+          input.value = "";
+          renderRoleChat(role);
+        });
+      }
+
+      function renderRoleSettings(role) {
+        $("#drawer-body").innerHTML = `
+          <div class="settings-grid">
+            <div class="field">
+              <label>显示名称</label>
+              <input id="settings-name" value="${escapeHtml(role.name)}" />
+            </div>
+            <div class="field">
+              <label>简介</label>
+              <textarea id="settings-desc">${escapeHtml(role.description)}</textarea>
+            </div>
+            <div class="field">
+              <label>加入的频道</label>
+              <div class="tag-row">
+                ${role.channels.map((id) => `<span class="tag">#${escapeHtml(state.channels.find((channel) => channel.id === id)?.name || id)}</span>`).join("") || '<span class="tag">尚未加入频道</span>'}
+              </div>
+            </div>
+            <div class="field">
+              <label>能力标签</label>
+              <input id="settings-caps" value="${escapeHtml(role.capabilities.join(", "))}" />
+            </div>
+            <button class="button primary" type="button" id="save-role-settings">保存设置</button>
+            <div class="danger-zone">
+              <span><strong>危险区域</strong><span>删除角色会从频道成员中移除，历史消息保留。</span></span>
+              <button class="button" type="button" disabled>删除角色</button>
+            </div>
+          </div>
+        `;
+        $("#save-role-settings").addEventListener("click", () => {
+          role.name = $("#settings-name").value.trim() || role.name;
+          role.description = $("#settings-desc").value.trim();
+          role.capabilities = $("#settings-caps").value
+            .split(",")
+            .map((item) => item.trim())
+            .filter(Boolean);
+          render();
+          renderRoleDrawer();
+          showToast("角色设置已保存");
+        });
+      }
+
+      function addExistingRolesToChannel() {
+        const channel = activeChannel();
+        const available = state.roles.filter((role) => !channel.memberRoleIds.includes(role.id));
+        if (available.length === 0) {
+          openRoleWizard();
+          return;
+        }
+        const role = available[0];
+        channel.memberRoleIds.push(role.id);
+        role.channels.push(channel.id);
+        channel.messages.push({ type: "system", text: `${role.name} 已加入频道。` });
+        render();
+        showToast(`${role.name} 已加入 #${channel.name}`);
+      }
+
+      function updateMentionMenu() {
+        const input = $("#composer-input");
+        const value = input.value.slice(0, input.selectionStart);
+        const match = /(^|\s)@([^\s@]*)$/u.exec(value);
+        const menu = $("#mention-menu");
+        if (!match) {
+          closeMentionMenu();
+          return;
+        }
+        const query = (match[2] || "").toLowerCase();
+        const channel = activeChannel();
+        const roles = channel.memberRoleIds
+          .map(roleById)
+          .filter(Boolean)
+          .filter((role) => role.name.toLowerCase().includes(query) || role.short.toLowerCase().includes(query));
+        if (roles.length === 0) {
+          closeMentionMenu();
+          return;
+        }
+        menu.innerHTML = roles
+          .map(
+            (role) => `
+              <button class="mention-option" type="button" data-mention-role="${role.id}">
+                <span class="role-avatar ${role.color}">${escapeHtml(role.short)}</span>
+                <span><strong>@${escapeHtml(role.name)}</strong><span>${escapeHtml(role.description)}</span></span>
+              </button>
+            `,
+          )
+          .join("");
+        menu.classList.add("open");
+        menu.querySelectorAll("[data-mention-role]").forEach((button) => {
+          button.addEventListener("mousedown", (event) => event.preventDefault());
+          button.addEventListener("click", () => {
+            const role = roleById(button.dataset.mentionRole);
+            const before = input.value.slice(0, input.selectionStart);
+            const after = input.value.slice(input.selectionStart);
+            const nextBefore = before.replace(/(^|\s)@([^\s@]*)$/u, `$1@${role.name} `);
+            input.value = nextBefore + after;
+            input.focus();
+            input.setSelectionRange(nextBefore.length, nextBefore.length);
+            closeMentionMenu();
+          });
+        });
+      }
+
+      function closeMentionMenu() {
+        $("#mention-menu").classList.remove("open");
+      }
+
+      document.querySelectorAll("[data-close]").forEach((button) => {
+        button.addEventListener("click", () => closeModal(button.dataset.close));
+      });
+
+      $("#new-channel-entry").addEventListener("click", openChannelModal);
+      $("#new-channel-top").addEventListener("click", openChannelModal);
+      $("#new-role-entry").addEventListener("click", openRoleWizard);
+      $("#invite-role-button").addEventListener("click", addExistingRolesToChannel);
+      $("#add-member-button").addEventListener("click", addExistingRolesToChannel);
+      $("#channel-form").addEventListener("submit", submitChannelForm);
+      $("#send-button").addEventListener("click", sendChannelMessage);
+      $("#composer-input").addEventListener("input", updateMentionMenu);
+      $("#composer-input").addEventListener("click", updateMentionMenu);
+      $("#composer-input").addEventListener("keyup", updateMentionMenu);
+      $("#composer-input").addEventListener("keydown", (event) => {
+        if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
+          event.preventDefault();
+          sendChannelMessage();
+        }
+      });
+      $("#quick-designer").addEventListener("click", () => {
+        $("#composer-input").value = "@设计师 帮我把这个频道的基础聊天体验做到像真实团队协作。";
+        $("#composer-input").focus();
+      });
+      $("#quick-engineer").addEventListener("click", () => {
+        $("#composer-input").value = "@工程师 这个 MVP 最小应该怎么落地？";
+        $("#composer-input").focus();
+      });
+
+      $("#role-back").addEventListener("click", () => {
+        saveRoleIdentityStep();
+        state.roleStep = Math.max(1, state.roleStep - 1);
+        renderRoleWizard();
+      });
+      $("#role-next").addEventListener("click", () => {
+        if (state.roleStep === 2) saveRoleIdentityStep();
+        if (state.roleStep === 3) {
+          createRoleFromDraft();
+          return;
+        }
+        state.roleStep += 1;
+        renderRoleWizard();
+      });
+      $("#drawer-close").addEventListener("click", closeRoleDrawer);
+      $("#drawer-backdrop").addEventListener("click", closeRoleDrawer);
+      document.querySelectorAll("[data-role-tab]").forEach((tab) => {
+        tab.addEventListener("click", () => {
+          state.drawerTab = tab.dataset.roleTab;
+          renderRoleDrawer();
+        });
+      });
+
+      render();
+    </script>
+  </body>
+</html>

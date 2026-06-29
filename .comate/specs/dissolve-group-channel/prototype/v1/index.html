@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Morrow 解散群聊原型</title>
+    <style>
+      :root {
+        --bg: #090a0d;
+        --panel: #111218;
+        --panel-2: #171922;
+        --panel-3: #20232d;
+        --line: #272a34;
+        --line-strong: #383c48;
+        --text: #f3f4f7;
+        --text-2: #c9ccd4;
+        --muted: #8a8f9d;
+        --accent: #a3ff3c;
+        --danger: #f97066;
+        --danger-bg: rgba(249, 112, 102, 0.08);
+        color-scheme: dark;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--text);
+      }
+      .window {
+        height: 100vh;
+        display: grid;
+        grid-template-columns: 280px minmax(0, 1fr);
+      }
+      .sidebar {
+        border-right: 1px solid var(--line);
+        background: var(--panel);
+        padding: 18px 10px;
+      }
+      .brand {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin: 0 6px 22px;
+      }
+      .mark {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        background: var(--accent);
+        color: var(--bg);
+        display: grid;
+        place-items: center;
+        font-weight: 700;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      .brand strong,
+      .channel-name {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .brand span,
+      .channel-meta,
+      .section-title {
+        color: var(--muted);
+        font-size: 11px;
+      }
+      .section-title {
+        margin: 16px 8px 8px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      .channel-row {
+        position: relative;
+        border-radius: 8px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 26px;
+        align-items: center;
+        color: var(--text-2);
+      }
+      .channel-row.active {
+        background: var(--panel-3);
+        color: var(--text);
+      }
+      .channel-row:hover,
+      .channel-row:focus-within {
+        background: var(--panel-2);
+      }
+      .channel-main,
+      .channel-dissolve {
+        border: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        cursor: pointer;
+      }
+      .channel-main {
+        min-width: 0;
+        padding: 9px 10px;
+        display: grid;
+        grid-template-columns: 24px minmax(0, 1fr) 18px;
+        gap: 8px;
+        align-items: center;
+        text-align: left;
+      }
+      .hash,
+      .count {
+        color: var(--muted);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      .channel-name,
+      .channel-meta {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .channel-dissolve {
+        width: 22px;
+        height: 22px;
+        border-radius: 6px;
+        opacity: 0;
+      }
+      .channel-row:hover .channel-dissolve,
+      .channel-dissolve:focus {
+        opacity: 1;
+      }
+      .channel-dissolve:hover,
+      .channel-dissolve:focus {
+        color: var(--danger);
+        background: var(--danger-bg);
+        outline: none;
+      }
+      main {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+      .header {
+        height: 64px;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        padding: 0 28px;
+      }
+      .header h1 {
+        margin: 0;
+        font-size: 20px;
+      }
+      .header p {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12px;
+      }
+      .stream {
+        flex: 1;
+        display: grid;
+        place-items: center;
+        color: var(--muted);
+        text-align: center;
+      }
+      .dialog-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(9, 10, 13, 0.94);
+        display: none;
+        align-items: flex-start;
+        justify-content: center;
+        padding-top: 80px;
+      }
+      .dialog-backdrop.open {
+        display: flex;
+      }
+      .dialog {
+        width: min(520px, calc(100vw - 48px));
+        border: 1px solid var(--line-strong);
+        border-radius: 14px;
+        background: var(--panel);
+        padding: 18px;
+      }
+      .dialog h2 {
+        margin: 0;
+        font-size: 20px;
+      }
+      .dialog p {
+        margin: 10px 0 0;
+        color: var(--text-2);
+        font-size: 13px;
+        line-height: 1.65;
+      }
+      .actions {
+        border-top: 1px solid var(--line);
+        margin-top: 18px;
+        padding-top: 16px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+      }
+      .btn {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel-2);
+        color: var(--text-2);
+        min-height: 34px;
+        padding: 0 14px;
+        cursor: pointer;
+      }
+      .btn:focus,
+      .btn:hover {
+        border-color: var(--line-strong);
+        color: var(--text);
+        outline: none;
+      }
+      .btn.danger {
+        color: var(--danger);
+        border-color: rgba(249, 112, 102, 0.45);
+      }
+      .btn.danger:focus,
+      .btn.danger:hover {
+        background: var(--danger-bg);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="window">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="mark">D</div>
+          <div>
+            <strong>Morrow Workspace</strong>
+            <span>本地个人工作空间</span>
+          </div>
+        </div>
+        <div class="section-title">群聊频道</div>
+        <div class="channel-row active">
+          <button class="channel-main" type="button">
+            <span class="hash">#</span>
+            <span>
+              <span class="channel-name">Morrow</span>
+              <span class="channel-meta">已绑定文件夹</span>
+            </span>
+            <span class="count">0</span>
+          </button>
+          <button class="channel-dissolve" type="button" aria-label="解散群聊 Morrow" title="解散群聊">
+            ×
+          </button>
+        </div>
+        <div class="channel-row">
+          <button class="channel-main" type="button">
+            <span class="hash">#</span>
+            <span>
+              <span class="channel-name">demo-room</span>
+              <span class="channel-meta">未绑定文件夹</span>
+            </span>
+            <span class="count">0</span>
+          </button>
+          <button class="channel-dissolve" type="button" aria-label="解散群聊 demo-room" title="解散群聊">
+            ×
+          </button>
+        </div>
+      </aside>
+      <main>
+        <header class="header">
+          <div>
+            <h1>#Morrow</h1>
+            <p>绑定文件夹 · /Users/songhuiyu/Morrow</p>
+          </div>
+        </header>
+        <section class="stream">
+          <div>
+            <h2>还没有消息</h2>
+            <p>直接发到群里，或输入 @ 选择一个频道里的角色。</p>
+          </div>
+        </section>
+      </main>
+    </div>
+    <div class="dialog-backdrop" id="confirm" role="dialog" aria-modal="true" aria-label="解散群聊">
+      <div class="dialog">
+        <h2>解散 #Morrow？</h2>
+        <p>
+          这个群聊会从侧边栏移除，群聊消息、交接记录和运行记录会一并删除。AI
+          队友本身不会删除。此操作无法撤销。
+        </p>
+        <div class="actions">
+          <button class="btn" type="button" id="cancel">取消</button>
+          <button class="btn danger" type="button" id="confirm-action">确认解散</button>
+        </div>
+      </div>
+    </div>
+    <script>
+      const dialog = document.querySelector('#confirm');
+      const cancel = document.querySelector('#cancel');
+      const confirmAction = document.querySelector('#confirm-action');
+      for (const button of document.querySelectorAll('.channel-dissolve')) {
+        button.addEventListener('click', () => {
+          dialog.classList.add('open');
+          confirmAction.focus();
+        });
+      }
+      cancel.addEventListener('click', () => dialog.classList.remove('open'));
+      confirmAction.addEventListener('click', () => {
+        confirmAction.textContent = '解散中…';
+        confirmAction.disabled = true;
+      });
+      window.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') dialog.classList.remove('open');
+      });
+    </script>
+  </body>
+</html>

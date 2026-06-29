@@ -1,0 +1,105 @@
+/* ── ModelPicker（Composer 内 chip） ───────────────── */
+.model-picker {
+  position: relative;
+  display: inline-flex;
+}
+.model-picker-trigger {
+  appearance: none;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  color: var(--text-2);
+  font-family: var(--sans);
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    color 0.15s,
+    background 0.15s;
+}
+.model-picker-trigger:hover {
+  color: var(--text);
+  border-color: var(--line-strong);
+}
+.model-picker-trigger:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.model-picker-trigger-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+}
+.model-picker-caret {
+  font-size: 10px;
+  color: var(--muted);
+}
+.model-picker-panel {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  right: 0;
+  min-width: 220px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 50;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+.model-picker-section-title {
+  color: var(--muted);
+  font-size: 11px;
+  padding: 4px 8px 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.model-picker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.model-picker-item {
+  appearance: none;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  padding: 6px 8px;
+  border-radius: 6px;
+  color: var(--text-2);
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition:
+    background 0.12s,
+    color 0.12s;
+}
+.model-picker-item:hover {
+  background: var(--panel-2);
+  color: var(--text);
+}
+.model-picker-item.active {
+  background: var(--panel-3);
+  color: var(--text);
+}
+.model-picker-item-sub {
+  margin-left: auto;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 11px;
+}
+.model-picker-divider {
+  height: 1px;
+  background: var(--line);
+  margin: 4px 0;
+}

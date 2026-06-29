@@ -1,0 +1,190 @@
+/* Agent terminal diagnostics and approval controls. */
+
+.terminal-pane {
+  width: 100%;
+  height: 100%;
+  min-height: 280px;
+  overflow: hidden;
+}
+.terminal-pane .xterm {
+  height: 100%;
+  padding: 2px 0;
+}
+.terminal-pane.read-only {
+  pointer-events: none;
+}
+.agent-status-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 10px 12px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+.terminal-log {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.terminal-log-toggle {
+  align-self: flex-start;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 12px;
+  cursor: pointer;
+}
+.terminal-log-toggle:hover {
+  border-color: var(--line-strong);
+  color: var(--text-2);
+}
+.terminal-log-pane {
+  height: 320px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.approval-prompt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  background: var(--panel-2);
+}
+.approval-copy {
+  flex: 1;
+  min-width: 0;
+}
+.approval-title {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+}
+.approval-detail {
+  margin-top: 3px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.approval-actions {
+  display: flex;
+  gap: 8px;
+}
+.approval-actions button {
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.approval-allow {
+  border: 0;
+  background: var(--accent);
+  color: var(--bg);
+}
+.approval-reject {
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: var(--text-2);
+}
+
+.run-status {
+  margin-bottom: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  overflow: hidden;
+}
+.run-status.warn {
+  border-color: var(--warning-border);
+}
+.run-status.error {
+  border-color: var(--error-border);
+}
+.run-status-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+}
+.run-status-copy {
+  flex: 1;
+  min-width: 0;
+}
+.run-status-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+}
+.run-status-detail {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.run-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+.run-status-dot.warn {
+  background: var(--warning);
+  box-shadow: none;
+}
+.run-status-dot.error {
+  background: var(--error);
+  box-shadow: none;
+}
+.run-status-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.run-status-actions button {
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-2);
+  font-size: 12px;
+  cursor: pointer;
+}
+.run-status-actions .run-status-primary {
+  border: 0;
+  background: var(--accent);
+  color: var(--bg);
+}
+.run-status-actions .run-status-danger {
+  color: var(--error);
+}
+.run-status-log {
+  max-height: 160px;
+  margin: 0;
+  padding: 10px 12px;
+  overflow: auto;
+  border-top: 1px solid var(--line);
+  background: var(--overlay-subtle);
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
