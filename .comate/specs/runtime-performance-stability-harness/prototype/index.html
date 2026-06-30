@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Morrow Runtime Recovery Prototype</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #08090b;
+        --panel: #111318;
+        --panel-2: #171a21;
+        --border: #282c36;
+        --text: #eef0f4;
+        --muted: #8e95a3;
+        --soft: #c7ccd6;
+        --accent: #9bf423;
+        --warn: #f7b955;
+        --error: #f97066;
+        --radius: 8px;
+        --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+      }
+
+      .window {
+        height: 100vh;
+        display: grid;
+        grid-template-columns: 280px 1fr;
+      }
+
+      .sidebar {
+        border-right: 1px solid var(--border);
+        padding: 28px 20px;
+        background: #0c0e12;
+      }
+
+      .brand {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 28px;
+      }
+
+      .logo {
+        width: 32px;
+        height: 32px;
+        border-radius: 9px;
+        background: var(--accent);
+        color: #111;
+        display: grid;
+        place-items: center;
+        font-weight: 700;
+      }
+
+      .nav-item {
+        border: 1px dashed var(--border);
+        border-radius: var(--radius);
+        padding: 12px 14px;
+        margin-bottom: 10px;
+        color: var(--soft);
+      }
+
+      .main {
+        display: grid;
+        grid-template-rows: 1fr auto;
+        min-width: 0;
+      }
+
+      .stream {
+        padding: 56px 64px 24px;
+        overflow: auto;
+      }
+
+      .message {
+        max-width: 760px;
+        margin: 0 0 18px auto;
+        padding: 14px 16px;
+        border-radius: var(--radius);
+        background: var(--panel-2);
+        color: var(--text);
+      }
+
+      .ai {
+        margin-right: auto;
+        margin-left: 0;
+        background: transparent;
+        border: 0;
+        padding: 0;
+      }
+
+      .ai-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--muted);
+        margin-bottom: 10px;
+      }
+
+      .badge {
+        width: 22px;
+        height: 22px;
+        border-radius: 6px;
+        display: grid;
+        place-items: center;
+        background: rgba(155, 244, 35, 0.22);
+        color: var(--accent);
+        font-weight: 700;
+        font-size: 12px;
+      }
+
+      .answer {
+        color: var(--soft);
+        line-height: 1.62;
+        max-width: 760px;
+      }
+
+      .run {
+        max-width: 760px;
+        margin: 12px 0 18px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--panel);
+        overflow: hidden;
+      }
+
+      .run-row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 12px;
+        align-items: center;
+        padding: 11px 12px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .run-row:last-child {
+        border-bottom: 0;
+      }
+
+      .run-title {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        min-width: 0;
+      }
+
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--accent);
+      }
+
+      .dot.warn {
+        background: var(--warn);
+      }
+
+      .dot.error {
+        background: var(--error);
+      }
+
+      .meta {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      button {
+        border: 1px solid var(--border);
+        border-radius: 7px;
+        background: #1b1f27;
+        color: var(--soft);
+        padding: 7px 10px;
+        font: inherit;
+      }
+
+      button.primary {
+        color: #111;
+        border-color: var(--accent);
+        background: var(--accent);
+        font-weight: 600;
+      }
+
+      button.danger {
+        color: var(--error);
+      }
+
+      .log {
+        max-height: 154px;
+        overflow: auto;
+        padding: 12px;
+        background: #090b0f;
+        color: #9fa7b6;
+        font-family: var(--mono);
+        font-size: 12px;
+        line-height: 1.55;
+        white-space: pre-wrap;
+      }
+
+      .composer {
+        border-top: 1px solid var(--border);
+        padding: 16px 64px 24px;
+        background: rgba(8, 9, 11, 0.92);
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 74px;
+        resize: none;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--panel);
+        color: var(--text);
+        padding: 14px;
+        font: inherit;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 22px;
+      }
+
+      .state-title {
+        color: var(--muted);
+        font-size: 13px;
+        margin: 26px 0 8px;
+      }
+
+      @media (max-width: 900px) {
+        .window {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          display: none;
+        }
+
+        .stream,
+        .composer {
+          padding-left: 18px;
+          padding-right: 18px;
+        }
+
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="window">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="logo">D</div>
+          <div>
+            <strong>Morrow Workspace</strong>
+            <div class="meta">本地个人工作空间</div>
+          </div>
+        </div>
+        <div class="nav-item">+ 新建对话</div>
+        <div class="nav-item"># 新建群聊</div>
+      </aside>
+      <main class="main">
+        <section class="stream">
+          <div class="message">介绍下这个项目</div>
+          <div class="ai">
+            <div class="ai-head"><span class="badge">C</span><span>Codex CLI</span></div>
+            <div class="answer">
+              这个仓库是一个 Electron + React 桌面应用，用来把本地 AI agent 工作流收进统一界面。
+            </div>
+          </div>
+
+          <div class="grid">
+            <div>
+              <div class="state-title">Loading: runtime 有活动，结构化回答未到</div>
+              <div class="run">
+                <div class="run-row">
+                  <div class="run-title">
+                    <span class="dot"></span>
+                    <span>Codex 正在运行</span>
+                    <span class="meta">1.7s</span>
+                  </div>
+                  <div class="actions">
+                    <button>查看日志</button>
+                    <button class="danger">取消</button>
+                  </div>
+                </div>
+                <div class="run-row meta">已收到运行活动，正在等待可读回复。</div>
+              </div>
+            </div>
+
+            <div>
+              <div class="state-title">Slow: 超过 10s，提供恢复动作</div>
+              <div class="run">
+                <div class="run-row">
+                  <div class="run-title">
+                    <span class="dot warn"></span>
+                    <span>Codex 仍在运行</span>
+                    <span class="meta">12.4s</span>
+                  </div>
+                  <div class="actions">
+                    <button>查看日志</button>
+                    <button class="danger">取消</button>
+                  </div>
+                </div>
+                <div class="log">mcp: turn.started
+pty: Codex CLI active
+supervisor: waiting for friendly output</div>
+              </div>
+            </div>
+
+            <div>
+              <div class="state-title">Error/Timeout: 不中断下一轮</div>
+              <div class="run">
+                <div class="run-row">
+                  <div class="run-title">
+                    <span class="dot error"></span>
+                    <span>本次运行已停止</span>
+                    <span class="meta">timeout</span>
+                  </div>
+                  <div class="actions">
+                    <button class="primary">重试</button>
+                    <button>重启 runtime</button>
+                    <button>日志</button>
+                  </div>
+                </div>
+                <div class="run-row meta">没有收到最终结果。已清理本次运行，可以继续发送。</div>
+              </div>
+            </div>
+
+            <div>
+              <div class="state-title">Extreme: 长日志折叠展示</div>
+              <div class="run">
+                <div class="run-row">
+                  <div class="run-title">
+                    <span class="dot"></span>
+                    <span>运行诊断</span>
+                    <span class="meta">只读</span>
+                  </div>
+                  <div class="actions">
+                    <button>复制</button>
+                  </div>
+                </div>
+                <div class="log">created run=abc
+first_output lane=fast at=1340ms
+deadline idle at=31244ms
+cancel requested by user
+late event ignored: friendly done</div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section class="composer">
+          <textarea placeholder="继续追问..."></textarea>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

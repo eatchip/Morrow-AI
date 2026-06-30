@@ -1,0 +1,287 @@
+/* Role drawer and creation dialogs for the channel MVP. */
+
+.icon-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  color: var(--muted);
+  font-size: 16px;
+  cursor: pointer;
+}
+.icon-btn:hover {
+  color: var(--text);
+  border-color: var(--line-strong);
+}
+.btn:disabled,
+.icon-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.btn.danger {
+  color: var(--error);
+  border-color: rgba(249, 112, 102, 0.45);
+}
+.btn.danger:hover {
+  background: rgba(249, 112, 102, 0.08);
+}
+.role-drawer {
+  width: 420px;
+  flex: 0 0 420px;
+  border-left: 1px solid var(--line);
+  background: var(--panel);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.role-drawer-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px;
+  border-bottom: 1px solid var(--line);
+}
+.role-drawer-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: var(--accent);
+  color: var(--bg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: 700;
+}
+.role-drawer-title {
+  flex: 1;
+  min-width: 0;
+}
+.role-delete-head {
+  flex: 0 0 auto;
+}
+.role-drawer-name {
+  font-size: 18px;
+  font-weight: 700;
+}
+.role-drawer-meta {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.role-tabs {
+  display: flex;
+  gap: 18px;
+  padding: 0 18px;
+  border-bottom: 1px solid var(--line);
+}
+.role-tabs button {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 14px 0 12px;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+}
+.role-tabs button.active {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+.role-drawer-body {
+  overflow: auto;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.form-field > span,
+.field-label {
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 600;
+}
+.form-field input,
+.form-field textarea,
+.form-field select {
+  width: 100%;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.55;
+  padding: 10px 12px;
+  outline: 0;
+}
+.form-field textarea {
+  resize: vertical;
+}
+.form-field input:focus,
+.form-field textarea:focus,
+.form-field select:focus {
+  border-color: var(--accent);
+}
+.role-save {
+  width: 100%;
+}
+.role-readonly-block {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px;
+  background: var(--panel-2);
+}
+.role-readonly-block p {
+  margin: 8px 0 0;
+  color: var(--text-2);
+  font-size: 13px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+.joined-channel-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.joined-channel-list span {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 4px 8px;
+}
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: var(--bg);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 70px;
+}
+.workspace-dialog {
+  width: min(760px, calc(100vw - 48px));
+  max-height: calc(100vh - 110px);
+  overflow: auto;
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  background: var(--panel);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.workspace-dialog.dissolve-dialog {
+  width: min(560px, calc(100vw - 48px));
+}
+.dialog-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 16px;
+}
+.dialog-head h2 {
+  margin: 0;
+  font-size: 20px;
+}
+.dialog-head p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+.folder-bind-row {
+  display: flex;
+  gap: 8px;
+}
+.folder-result {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 10px 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dialog-list {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.dialog-list.compact {
+  padding: 6px;
+}
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  color: var(--text-2);
+  border-bottom: 1px solid var(--line);
+}
+.check-row:last-child {
+  border-bottom: 0;
+}
+.check-row strong {
+  display: block;
+  color: var(--text);
+  font-size: 13px;
+}
+.check-row em {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+  margin-top: 2px;
+}
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+}
+.dialog-error {
+  border: 1px solid rgba(249, 112, 102, 0.45);
+  border-radius: 8px;
+  background: rgba(249, 112, 102, 0.06);
+  color: var(--error);
+  font-size: 13px;
+  padding: 10px 12px;
+}
+.danger-zone {
+  border: 1px solid rgba(249, 112, 102, 0.45);
+  border-radius: 10px;
+  background: rgba(249, 112, 102, 0.06);
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+.danger-zone strong {
+  color: var(--text);
+  font-size: 13px;
+}
+.danger-zone p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}

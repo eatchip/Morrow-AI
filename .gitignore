@@ -1,0 +1,70 @@
+# ─── OS ─────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+Desktop.ini
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+
+# ─── Editors / IDE ──────────────────────────────────
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+*.swp
+*.swo
+*~
+
+# ─── Logs ───────────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ─── Env / Secrets ──────────────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# ─── Dependency / Build Artifacts ──────────────────
+node_modules/
+dist/
+build/
+out/
+coverage/
+.next/
+.nuxt/
+.cache/
+.parcel-cache/
+.turbo/
+target/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# ─── Tooling ────────────────────────────────────────
+.eslintcache
+.stylelintcache
+.pnpm-store/
+.tsbuildinfo
+*.tsbuildinfo
+playwright-report/
+test-results/
+
+# ─── Agent / SDD runtime scratch ───────────────────
+# Keep .comate/specs/ tracked; ignore any local scratch
+.comate/cache/
+.comate/tmp/
+
+# ─── OS-specific binaries ──────────────────────────
+*.exe
+*.dll
+*.dylib
+*.so

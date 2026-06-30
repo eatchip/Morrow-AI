@@ -1,0 +1,18 @@
+appId: com.eatchip.morrow
+productName: Morrow
+directories:
+  output: dist
+  buildResources: resources
+asarUnpack:
+  - out/**/*
+mac:
+  target:
+    - target: dmg
+      arch: [arm64, x64]
+  category: public.app-category.developer-tools
+  icon: resources/icon.png
+  artifactName: ${productName}-${version}-${arch}.${ext}
+  # MVP 阶段不做代码签名 / 公证；首次打开用户需右键 → 打开
+  identity: null
+dmg:
+  writeUpdateInfo: false

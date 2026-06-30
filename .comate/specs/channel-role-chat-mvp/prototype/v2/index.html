@@ -1,0 +1,2099 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Morrow · Channel Role Chat MVP v2</title>
+    <style>
+      :root {
+        --bg: #050608;
+        --sidebar: #08090c;
+        --surface: #0d0f14;
+        --surface-2: #12151c;
+        --surface-3: #171b23;
+        --surface-hover: #1d222c;
+        --line: #242936;
+        --line-strong: #343a48;
+        --text: #f4f5f7;
+        --text-2: #c5cad3;
+        --muted: #858b98;
+        --muted-2: #626977;
+        --accent: #a3e635;
+        --accent-text: #d9ff88;
+        --accent-soft: rgba(163, 230, 53, 0.11);
+        --accent-line: rgba(163, 230, 53, 0.36);
+        --danger: #ff6363;
+        --danger-soft: rgba(255, 99, 99, 0.1);
+        --shadow-lg: 0 28px 90px rgba(0, 0, 0, 0.56);
+        --radius-sm: 4px;
+        --radius-md: 6px;
+        --radius-lg: 8px;
+        --radius-xl: 12px;
+        --sidebar-width: 284px;
+        --members-width: 328px;
+        --sans:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", "PingFang SC",
+          "Microsoft YaHei", sans-serif;
+        --mono: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, Consolas, monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--sans);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      button,
+      input,
+      textarea,
+      select {
+        font: inherit;
+      }
+
+      button {
+        cursor: pointer;
+      }
+
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.48;
+      }
+
+      .app {
+        height: 100vh;
+        display: grid;
+        grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+        background: var(--bg);
+        overflow: hidden;
+      }
+
+      .app.members-open {
+        grid-template-columns: var(--sidebar-width) minmax(0, 1fr) var(--members-width);
+      }
+
+      .sidebar {
+        min-width: 0;
+        border-right: 1px solid var(--line);
+        background: var(--sidebar);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .traffic {
+        height: 44px;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 0 18px;
+      }
+
+      .traffic i {
+        width: 11px;
+        height: 11px;
+        border-radius: 999px;
+        display: block;
+      }
+
+      .traffic i:nth-child(1) {
+        background: #ff5f57;
+      }
+
+      .traffic i:nth-child(2) {
+        background: #ffbd2e;
+      }
+
+      .traffic i:nth-child(3) {
+        background: #28c840;
+      }
+
+      .workspace {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 18px 16px;
+      }
+
+      .workspace-mark {
+        width: 28px;
+        height: 28px;
+        border-radius: var(--radius-md);
+        display: grid;
+        place-items: center;
+        background: #5f6cff;
+        color: #fff;
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .workspace strong {
+        display: block;
+        font-size: 15px;
+        font-weight: 650;
+      }
+
+      .workspace span {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+        margin-top: 2px;
+      }
+
+      .primary-actions {
+        display: grid;
+        gap: 8px;
+        padding: 0 12px 16px;
+      }
+
+      .action-button,
+      .ghost-button,
+      .text-button,
+      .icon-button,
+      .send-button {
+        border: 1px solid var(--line);
+        border-radius: var(--radius-lg);
+        background: var(--surface-2);
+        color: var(--text);
+        min-height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 0 12px;
+      }
+
+      .action-button {
+        justify-content: flex-start;
+        color: var(--text-2);
+        background: transparent;
+        border-style: dashed;
+      }
+
+      .action-button:hover,
+      .ghost-button:hover,
+      .text-button:hover,
+      .icon-button:hover {
+        background: var(--surface-hover);
+        border-color: var(--line-strong);
+        color: var(--text);
+      }
+
+      .accent-button,
+      .send-button {
+        border-color: var(--accent);
+        background: var(--accent);
+        color: #0d1206;
+        font-weight: 700;
+      }
+
+      .accent-button:hover,
+      .send-button:hover {
+        background: #b9f75d;
+      }
+
+      .section {
+        padding: 8px 0 14px;
+      }
+
+      .section-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 18px 8px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .section-list {
+        display: grid;
+        gap: 4px;
+        padding: 0 12px;
+      }
+
+      .nav-row,
+      .role-row {
+        width: 100%;
+        min-height: 38px;
+        border: 0;
+        border-radius: var(--radius-lg);
+        background: transparent;
+        color: var(--text-2);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 10px;
+        text-align: left;
+      }
+
+      .nav-row:hover,
+      .role-row:hover {
+        background: var(--surface-2);
+        color: var(--text);
+      }
+
+      .nav-row.active,
+      .role-row.active {
+        background: rgba(255, 255, 255, 0.075);
+        color: var(--text);
+      }
+
+      .nav-row.active {
+        box-shadow: inset 3px 0 0 var(--accent);
+      }
+
+      .hash {
+        color: var(--muted);
+        font-size: 18px;
+        line-height: 1;
+      }
+
+      .row-main {
+        min-width: 0;
+        flex: 1;
+      }
+
+      .row-title {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .row-subtitle {
+        margin-top: 2px;
+        color: var(--muted);
+        font-size: 12px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .count {
+        color: var(--muted);
+        font-size: 12px;
+        font-family: var(--mono);
+      }
+
+      .role-avatar,
+      .message-avatar,
+      .person-avatar {
+        width: 30px;
+        height: 30px;
+        border-radius: var(--radius-lg);
+        display: grid;
+        place-items: center;
+        flex: 0 0 auto;
+        background: var(--surface-3);
+        color: var(--text);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0;
+      }
+
+      .role-avatar[data-tone="lime"],
+      .message-avatar[data-tone="lime"] {
+        background: #a3e635;
+        color: #152006;
+      }
+
+      .role-avatar[data-tone="blue"],
+      .message-avatar[data-tone="blue"] {
+        background: #65b7d8;
+        color: #06151d;
+      }
+
+      .role-avatar[data-tone="rose"],
+      .message-avatar[data-tone="rose"] {
+        background: #e77292;
+        color: #1b050c;
+      }
+
+      .role-avatar[data-tone="violet"],
+      .message-avatar[data-tone="violet"] {
+        background: #8d7cff;
+        color: #100c2a;
+      }
+
+      .ai-pill,
+      .model-pill,
+      .folder-pill {
+        min-height: 22px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-md);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0 8px;
+        color: var(--text-2);
+        background: rgba(255, 255, 255, 0.035);
+        font-size: 12px;
+      }
+
+      .ai-pill {
+        border-color: var(--accent-line);
+        color: var(--accent-text);
+        background: var(--accent-soft);
+        font-family: var(--mono);
+        font-size: 11px;
+      }
+
+      .sidebar-footer {
+        margin-top: auto;
+        border-top: 1px solid var(--line);
+        padding: 14px 18px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .person-avatar {
+        background: #f2a900;
+        color: #1d1200;
+      }
+
+      .shell {
+        min-width: 0;
+        display: grid;
+        grid-template-rows: 64px minmax(0, 1fr) auto;
+        background: var(--bg);
+      }
+
+      .topbar {
+        min-width: 0;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 0 24px;
+      }
+
+      .title-block {
+        min-width: 0;
+      }
+
+      .title-line {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+      }
+
+      .title-line h1 {
+        margin: 0;
+        font-size: 21px;
+        line-height: 1.2;
+        font-weight: 700;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .subtitle {
+        color: var(--muted);
+        font-size: 13px;
+        margin-top: 4px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .topbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 0 0 auto;
+      }
+
+      .icon-button {
+        width: 34px;
+        padding: 0;
+      }
+
+      .members-toggle.active {
+        border-color: var(--accent-line);
+        background: var(--accent-soft);
+        color: var(--accent-text);
+      }
+
+      .timeline {
+        min-width: 0;
+        overflow: auto;
+        padding: 24px;
+      }
+
+      .timeline-inner {
+        max-width: 900px;
+        margin: 0 auto;
+      }
+
+      .day-divider {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        color: var(--muted-2);
+        font-size: 12px;
+        margin: 4px 0 22px;
+      }
+
+      .day-divider::before,
+      .day-divider::after {
+        content: "";
+        height: 1px;
+        flex: 1;
+        background: var(--line);
+      }
+
+      .system-chip {
+        width: fit-content;
+        max-width: 100%;
+        margin: 0 auto 22px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        color: var(--muted);
+        background: var(--surface);
+        padding: 6px 12px;
+        font-size: 12px;
+      }
+
+      .message {
+        display: grid;
+        grid-template-columns: 36px minmax(0, 1fr);
+        gap: 12px;
+        margin: 0 0 22px;
+      }
+
+      .message-body {
+        min-width: 0;
+      }
+
+      .message-meta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 6px;
+      }
+
+      .message-name {
+        font-weight: 700;
+      }
+
+      .message-time {
+        color: var(--muted);
+        font-size: 12px;
+        font-family: var(--mono);
+      }
+
+      .message-text {
+        color: var(--text-2);
+        font-size: 15px;
+        line-height: 1.65;
+      }
+
+      .message-text p {
+        margin: 0 0 10px;
+      }
+
+      .message-text p:last-child {
+        margin-bottom: 0;
+      }
+
+      .mention {
+        display: inline-flex;
+        align-items: center;
+        height: 22px;
+        border: 1px solid var(--accent-line);
+        border-radius: var(--radius-md);
+        padding: 0 6px;
+        color: var(--accent-text);
+        background: var(--accent-soft);
+      }
+
+      .composer-wrap {
+        border-top: 1px solid var(--line);
+        padding: 16px 24px 18px;
+      }
+
+      .composer {
+        max-width: 900px;
+        margin: 0 auto;
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius-xl);
+        background: var(--surface);
+        overflow: hidden;
+      }
+
+      .composer textarea {
+        width: 100%;
+        min-height: 86px;
+        resize: vertical;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: var(--text);
+        padding: 14px 16px;
+        line-height: 1.5;
+      }
+
+      .composer textarea::placeholder {
+        color: var(--muted-2);
+      }
+
+      .composer-bottom {
+        min-height: 44px;
+        border-top: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 8px 10px 8px 14px;
+      }
+
+      .quick-mentions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        min-width: 0;
+      }
+
+      .mention-chip {
+        height: 28px;
+        border: 1px solid transparent;
+        border-radius: var(--radius-md);
+        background: transparent;
+        color: var(--text-2);
+        padding: 0 8px;
+      }
+
+      .mention-chip:hover {
+        border-color: var(--accent-line);
+        background: var(--accent-soft);
+        color: var(--accent-text);
+      }
+
+      .composer-hint {
+        color: var(--muted);
+        font-size: 12px;
+        white-space: nowrap;
+      }
+
+      .members-panel {
+        min-width: 0;
+        border-left: 1px solid var(--line);
+        background: #07080b;
+        display: none;
+        grid-template-rows: auto minmax(0, 1fr);
+      }
+
+      .members-open .members-panel {
+        display: grid;
+      }
+
+      .members-head {
+        height: 64px;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 16px;
+      }
+
+      .members-head strong {
+        font-size: 15px;
+      }
+
+      .members-list {
+        overflow: auto;
+        padding: 14px 12px;
+        display: grid;
+        align-content: start;
+        gap: 10px;
+      }
+
+      .member-card {
+        border: 1px solid var(--line);
+        border-radius: var(--radius-xl);
+        background: var(--surface);
+        padding: 14px;
+        text-align: left;
+        color: var(--text);
+      }
+
+      .member-card:hover {
+        border-color: var(--line-strong);
+        background: var(--surface-2);
+      }
+
+      .member-card-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .member-card strong {
+        display: block;
+        font-size: 15px;
+      }
+
+      .member-card small {
+        display: block;
+        margin-top: 2px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .member-card p {
+        color: var(--text-2);
+        font-size: 13px;
+        line-height: 1.55;
+        margin: 0;
+      }
+
+      .empty-state {
+        border: 1px dashed var(--line-strong);
+        border-radius: var(--radius-xl);
+        padding: 18px;
+        color: var(--muted);
+        text-align: center;
+        line-height: 1.6;
+      }
+
+      .modal-layer,
+      .drawer-layer {
+        position: fixed;
+        inset: 0;
+        z-index: 30;
+        display: none;
+      }
+
+      .modal-layer.open,
+      .drawer-layer.open {
+        display: block;
+      }
+
+      .scrim {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.58);
+      }
+
+      .modal {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: min(760px, calc(100vw - 40px));
+        max-height: calc(100vh - 48px);
+        overflow: hidden;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius-xl);
+        background: var(--surface);
+        box-shadow: var(--shadow-lg);
+      }
+
+      .modal-head,
+      .modal-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 16px 18px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .modal-foot {
+        border-top: 1px solid var(--line);
+        border-bottom: 0;
+        justify-content: flex-end;
+      }
+
+      .modal-head h2 {
+        margin: 0;
+        font-size: 17px;
+      }
+
+      .modal-body {
+        overflow: auto;
+        padding: 18px;
+        display: grid;
+        gap: 18px;
+      }
+
+      .field {
+        display: grid;
+        gap: 8px;
+      }
+
+      .field label,
+      .field-title {
+        color: var(--text-2);
+        font-size: 13px;
+        font-weight: 650;
+      }
+
+      .field-hint {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.55;
+      }
+
+      .input,
+      .textarea,
+      .select {
+        width: 100%;
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius-lg);
+        background: #07080b;
+        color: var(--text);
+        outline: 0;
+        padding: 10px 12px;
+      }
+
+      .textarea {
+        min-height: 96px;
+        resize: vertical;
+        line-height: 1.5;
+      }
+
+      .input:focus,
+      .textarea:focus,
+      .select:focus {
+        border-color: var(--accent-line);
+        box-shadow: 0 0 0 3px rgba(163, 230, 53, 0.08);
+      }
+
+      .folder-control {
+        border: 1px solid var(--line);
+        border-radius: var(--radius-xl);
+        background: #090b0f;
+        padding: 14px;
+        display: grid;
+        gap: 12px;
+      }
+
+      .folder-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .folder-path {
+        min-width: 0;
+        color: var(--text-2);
+        font-family: var(--mono);
+        font-size: 13px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .folder-placeholder {
+        color: var(--muted);
+        font-family: var(--sans);
+      }
+
+      .choice-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .choice-card {
+        min-height: 58px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-lg);
+        background: #090b0f;
+        color: var(--text);
+        text-align: left;
+        padding: 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .choice-card.active {
+        border-color: var(--accent-line);
+        background: var(--accent-soft);
+      }
+
+      .radio-dot,
+      .check-box {
+        width: 18px;
+        height: 18px;
+        border: 1px solid var(--line-strong);
+        flex: 0 0 auto;
+        display: grid;
+        place-items: center;
+      }
+
+      .radio-dot {
+        border-radius: 999px;
+      }
+
+      .check-box {
+        border-radius: var(--radius-sm);
+      }
+
+      .choice-card.active .radio-dot,
+      .check-row.active .check-box {
+        border-color: var(--accent);
+        background: var(--accent);
+      }
+
+      .choice-card.active .radio-dot::after {
+        content: "";
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background: #0d1206;
+      }
+
+      .check-row.active .check-box::after {
+        content: "";
+        width: 8px;
+        height: 5px;
+        border-left: 2px solid #0d1206;
+        border-bottom: 2px solid #0d1206;
+        transform: rotate(-45deg) translateY(-1px);
+      }
+
+      .check-list {
+        border: 1px solid var(--line);
+        border-radius: var(--radius-xl);
+        overflow: hidden;
+      }
+
+      .check-row {
+        width: 100%;
+        border: 0;
+        border-bottom: 1px solid var(--line);
+        background: #090b0f;
+        color: var(--text);
+        padding: 12px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-align: left;
+      }
+
+      .check-row:last-child {
+        border-bottom: 0;
+      }
+
+      .check-row:hover {
+        background: var(--surface-2);
+      }
+
+      .check-row small {
+        display: block;
+        color: var(--muted);
+        margin-top: 2px;
+      }
+
+      .notice {
+        border: 1px solid var(--accent-line);
+        border-radius: var(--radius-lg);
+        background: var(--accent-soft);
+        color: var(--text-2);
+        padding: 12px;
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      .drawer {
+        position: absolute;
+        right: 0;
+        top: 0;
+        width: min(520px, 100vw);
+        height: 100%;
+        background: var(--surface);
+        border-left: 1px solid var(--line-strong);
+        box-shadow: var(--shadow-lg);
+        display: grid;
+        grid-template-rows: auto auto minmax(0, 1fr);
+      }
+
+      .drawer-head {
+        padding: 22px 24px 18px;
+        display: grid;
+        grid-template-columns: 56px minmax(0, 1fr) auto;
+        gap: 16px;
+        align-items: start;
+      }
+
+      .drawer-head .role-avatar {
+        width: 56px;
+        height: 56px;
+        border-radius: var(--radius-xl);
+        font-size: 18px;
+      }
+
+      .drawer-title h2 {
+        margin: 0;
+        font-size: 22px;
+      }
+
+      .drawer-title p {
+        margin: 8px 0 0;
+        color: var(--text-2);
+        line-height: 1.55;
+      }
+
+      .drawer-tabs {
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        gap: 4px;
+        padding: 0 24px;
+      }
+
+      .tab {
+        height: 46px;
+        border: 0;
+        border-bottom: 2px solid transparent;
+        background: transparent;
+        color: var(--muted);
+        padding: 0 14px;
+        font-weight: 650;
+      }
+
+      .tab.active {
+        color: var(--text);
+        border-bottom-color: var(--accent);
+      }
+
+      .drawer-body {
+        min-height: 0;
+        overflow: auto;
+        padding: 18px 24px;
+      }
+
+      .drawer-chat {
+        min-height: 100%;
+        display: grid;
+        grid-template-rows: minmax(0, 1fr) auto;
+        gap: 14px;
+      }
+
+      .mini-thread {
+        display: grid;
+        align-content: start;
+        gap: 12px;
+      }
+
+      .mini-message {
+        border: 1px solid var(--line);
+        border-radius: var(--radius-xl);
+        background: #090b0f;
+        padding: 12px;
+        color: var(--text-2);
+        line-height: 1.55;
+      }
+
+      .mini-message.user {
+        border-color: var(--accent-line);
+        background: var(--accent-soft);
+        color: var(--text);
+      }
+
+      .inline-composer {
+        display: flex;
+        gap: 8px;
+      }
+
+      .inline-composer input {
+        flex: 1;
+      }
+
+      .settings-grid {
+        display: grid;
+        gap: 18px;
+      }
+
+      .joined-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      @media (max-width: 1120px) {
+        .app,
+        .app.members-open {
+          grid-template-columns: 250px minmax(0, 1fr);
+        }
+
+        .members-panel {
+          position: fixed;
+          right: 0;
+          top: 0;
+          bottom: 0;
+          width: min(340px, 90vw);
+          z-index: 20;
+          box-shadow: var(--shadow-lg);
+        }
+      }
+
+      @media (max-width: 760px) {
+        .app,
+        .app.members-open {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          display: none;
+        }
+
+        .topbar {
+          padding: 0 14px;
+        }
+
+        .timeline,
+        .composer-wrap {
+          padding-left: 14px;
+          padding-right: 14px;
+        }
+
+        .choice-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script>
+      const root = document.getElementById("root");
+
+      const state = {
+        mode: "group",
+        activeChannelId: "general",
+        activeDirectId: "solo",
+        membersOpen: false,
+        activeDrawerRoleId: null,
+        drawerTab: "chat",
+        modal: null,
+        draft: "",
+        channelDraft: {
+          name: "",
+          description: "",
+          folderPath: "",
+          selectedRoleIds: [],
+        },
+        roleDraft: {
+          name: "",
+          intro: "",
+          instruction: "",
+          model: "Claude Code",
+          selectedChannelIds: [],
+        },
+        addRoleSelection: [],
+        roles: [
+          {
+            id: "designer",
+            name: "设计师",
+            initials: "DS",
+            tone: "lime",
+            model: "Claude Code",
+            intro: "负责信息架构、界面布局、视觉稿和交互状态。",
+            instruction:
+              "你是 Morrow 工作空间里的设计师。你的职责是帮助用户把复杂工作流整理成清晰、克制、可落地的界面方案。回复时优先关注信息架构、布局层级、视觉一致性、交互状态和空态/错误态。不要输出泛泛的审美评价，要给出具体可执行的界面建议。",
+            directMessages: [
+              { author: "role", text: "我会先把界面结构收窄，让聊天本身成为主画面。" },
+            ],
+          },
+          {
+            id: "engineer",
+            name: "工程师",
+            initials: "EN",
+            tone: "blue",
+            model: "Codex",
+            intro: "负责实现路径、代码改动、测试和调试。",
+            instruction:
+              "你是 Morrow 工作空间里的工程师。你的职责是把产品方案拆成可实现的代码路径，指出状态所有权、数据结构、边界校验、测试方式和可能的实现风险。回复时保持直接、具体，优先给出能落地的最小实现方案。",
+            directMessages: [
+              { author: "role", text: "如果要落地到 Electron，我会把文件夹选择交给主进程。" },
+            ],
+          },
+          {
+            id: "pm",
+            name: "产品经理",
+            initials: "PM",
+            tone: "rose",
+            model: "Claude Code",
+            intro: "负责目标澄清、需求拆解、验收口径和优先级。",
+            instruction:
+              "你是 Morrow 工作空间里的产品经理。你的职责是帮助用户澄清目标、拆解需求、定义 MVP 范围、判断优先级和验收标准。回复时要指出当前最重要的用户路径，避免把简单产品做成复杂系统。",
+            directMessages: [
+              { author: "role", text: "先把个人对话和群聊两个核心路径打磨顺，再考虑更复杂的协作面板。" },
+            ],
+          },
+        ],
+        channels: [
+          {
+            id: "general",
+            name: "general",
+            description: "讨论 Morrow 的基础体验。",
+            folderPath: "/Users/songhuiyu/Morrow",
+            memberRoleIds: ["designer", "engineer"],
+            messages: [
+              {
+                type: "system",
+                text: "#general 已绑定 /Users/songhuiyu/Morrow",
+              },
+              {
+                author: "user",
+                text: '<span class="mention">@设计师</span> 我想把频道、角色和聊天的基础体验重新做顺。',
+                time: "14:18",
+              },
+              {
+                author: "designer",
+                text: "我建议先把左侧只保留个人对话、群聊频道、AI 队友。中间永远是当前聊天，右侧成员栏默认收起，需要看成员时再展开。",
+                time: "14:19",
+              },
+            ],
+          },
+        ],
+        directs: [
+          {
+            id: "solo",
+            title: "新建对话",
+            model: "Claude Code",
+            messages: [
+              {
+                author: "user",
+                text: "先帮我看一下 Morrow 的群聊体验应该怎么收敛。",
+                time: "14:10",
+              },
+              {
+                author: "assistant",
+                text: "可以把个人对话作为默认入口，把群聊频道作为需要多人视角时的增强入口。这样不会强迫用户每件事都进入复杂空间。",
+                time: "14:11",
+              },
+            ],
+          },
+        ],
+      };
+
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;");
+      }
+
+      function idFromName(name, prefix) {
+        const normalized = name
+          .trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9\u4e00-\u9fa5]+/g, "-")
+          .replace(/^-|-$/g, "");
+        return `${prefix}-${normalized || Date.now()}`;
+      }
+
+      function getChannel() {
+        return state.channels.find((item) => item.id === state.activeChannelId) || null;
+      }
+
+      function getDirect() {
+        return state.directs.find((item) => item.id === state.activeDirectId) || null;
+      }
+
+      function getRole(roleId) {
+        return state.roles.find((item) => item.id === roleId) || null;
+      }
+
+      function currentTitle() {
+        if (state.mode === "direct") {
+          const direct = getDirect();
+          return direct ? direct.title : "个人对话";
+        }
+        const channel = getChannel();
+        return channel ? `#${channel.name}` : "群聊频道";
+      }
+
+      function currentSubtitle() {
+        if (state.mode === "direct") {
+          const direct = getDirect();
+          return direct ? `本地单人对话 · ${direct.model}` : "本地单人对话";
+        }
+        const channel = getChannel();
+        if (!channel) return "还没有群聊频道";
+        return channel.folderPath
+          ? `绑定文件夹 · ${channel.folderPath}`
+          : "未绑定文件夹";
+      }
+
+      function roleChannels(roleId) {
+        return state.channels.filter((channel) => channel.memberRoleIds.includes(roleId));
+      }
+
+      function setMode(mode, id) {
+        state.mode = mode;
+        if (mode === "group") state.activeChannelId = id;
+        if (mode === "direct") state.activeDirectId = id;
+        state.draft = "";
+        render();
+      }
+
+      function openModal(name) {
+        state.modal = name;
+        if (name === "channel") {
+          state.channelDraft = {
+            name: "",
+            description: "",
+            folderPath: "",
+            selectedRoleIds: [],
+          };
+        }
+        if (name === "role") {
+          state.roleDraft = {
+            name: "",
+            intro: "",
+            instruction: "",
+            model: "Claude Code",
+            selectedChannelIds: state.mode === "group" && getChannel() ? [state.activeChannelId] : [],
+          };
+        }
+        if (name === "add-role") {
+          state.addRoleSelection = [];
+        }
+        render();
+      }
+
+      function closeModal() {
+        state.modal = null;
+        render();
+      }
+
+      function createDirect() {
+        const nextNumber = state.directs.length + 1;
+        const id = `direct-${Date.now()}`;
+        state.directs.unshift({
+          id,
+          title: `个人对话 ${nextNumber}`,
+          model: "Claude Code",
+          messages: [
+            {
+              author: "assistant",
+              text: "这是一个新的本地单人对话。需要其他 AI 队友一起给建议时，可以切到群聊频道。",
+              time: nowTime(),
+            },
+          ],
+        });
+        setMode("direct", id);
+      }
+
+      function createChannel() {
+        const name = state.channelDraft.name.trim();
+        if (!name) return;
+        const id = idFromName(name, "channel");
+        const channel = {
+          id,
+          name: name.replace(/^#/, ""),
+          description: state.channelDraft.description.trim(),
+          folderPath: state.channelDraft.folderPath,
+          memberRoleIds: [...state.channelDraft.selectedRoleIds],
+          messages: [
+            {
+              type: "system",
+              text: state.channelDraft.folderPath
+                ? `#${name.replace(/^#/, "")} 已绑定 ${state.channelDraft.folderPath}`
+                : `#${name.replace(/^#/, "")} 暂未绑定文件夹`,
+            },
+          ],
+        };
+        state.channels.unshift(channel);
+        state.mode = "group";
+        state.activeChannelId = channel.id;
+        state.membersOpen = false;
+        closeModal();
+      }
+
+      function createRole() {
+        const name = state.roleDraft.name.trim();
+        const intro = state.roleDraft.intro.trim();
+        const instruction = state.roleDraft.instruction.trim();
+        if (!name || !intro || !instruction || !state.roleDraft.model) return;
+        const id = idFromName(name, "role");
+        const role = {
+          id,
+          name,
+          initials: initialsFromName(name),
+          tone: nextTone(),
+          model: state.roleDraft.model,
+          intro,
+          instruction,
+          directMessages: [
+            {
+              author: "role",
+              text: `我是${name}。${intro} 我的行为会由 Settings 里的「指示」决定。`,
+            },
+          ],
+        };
+        state.roles.push(role);
+        state.roleDraft.selectedChannelIds.forEach((channelId) => {
+          const channel = state.channels.find((item) => item.id === channelId);
+          if (channel && !channel.memberRoleIds.includes(id)) {
+            channel.memberRoleIds.push(id);
+            channel.messages.push({ type: "system", text: `${name} 已加入频道。` });
+          }
+        });
+        state.activeDrawerRoleId = id;
+        state.drawerTab = "settings";
+        closeModal();
+      }
+
+      function addRolesToChannel() {
+        const channel = getChannel();
+        if (!channel) return;
+        state.addRoleSelection.forEach((roleId) => {
+          if (!channel.memberRoleIds.includes(roleId)) {
+            channel.memberRoleIds.push(roleId);
+            const role = getRole(roleId);
+            channel.messages.push({ type: "system", text: `${role.name} 已加入频道。` });
+          }
+        });
+        closeModal();
+      }
+
+      function initialsFromName(name) {
+        const ascii = name.match(/[a-zA-Z]/g);
+        if (ascii && ascii.length) return ascii.slice(0, 2).join("").toUpperCase();
+        return name.slice(0, 2).toUpperCase();
+      }
+
+      function nextTone() {
+        const tones = ["lime", "blue", "rose", "violet"];
+        return tones[state.roles.length % tones.length];
+      }
+
+      function nowTime() {
+        const date = new Date();
+        return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+      }
+
+      function appendMention(roleId) {
+        const role = getRole(roleId);
+        if (!role) return;
+        const prefix = state.draft && !state.draft.endsWith(" ") ? " " : "";
+        state.draft += `${prefix}@${role.name} `;
+        render();
+        const input = document.getElementById("composer-input");
+        if (input) {
+          input.focus();
+          input.selectionStart = input.value.length;
+          input.selectionEnd = input.value.length;
+        }
+      }
+
+      function sendMessage() {
+        const draft = state.draft.trim();
+        if (!draft) return;
+        if (state.mode === "direct") {
+          const direct = getDirect();
+          if (!direct) return;
+          direct.messages.push({ author: "user", text: escapeMessage(draft), time: nowTime() });
+          direct.messages.push({
+            author: "assistant",
+            text: "收到。我会先按个人对话给出判断；如果需要多角色观点，可以把这个问题发到群聊频道并 @ 对应角色。",
+            time: nowTime(),
+          });
+        } else {
+          const channel = getChannel();
+          if (!channel) return;
+          channel.messages.push({ author: "user", text: escapeMessage(draft), time: nowTime() });
+          const mentionedRoles = channel.memberRoleIds
+            .map((roleId) => getRole(roleId))
+            .filter((role) => role && draft.includes(`@${role.name}`));
+          const responders = mentionedRoles.length
+            ? mentionedRoles
+            : channel.memberRoleIds.map((roleId) => getRole(roleId)).filter(Boolean).slice(0, 1);
+          responders.forEach((role) => {
+            channel.messages.push({
+              author: role.id,
+              text: `${role.intro} 我会按照当前「指示」回应：先围绕你刚才的问题给出一个可执行建议，保持主聊天区稳定，把成员信息和角色设置都收进临时面板，只在需要时展开。`,
+              time: nowTime(),
+            });
+          });
+        }
+        state.draft = "";
+        render();
+      }
+
+      function escapeMessage(text) {
+        const escaped = escapeHtml(text);
+        return escaped.replace(/@([\u4e00-\u9fa5a-zA-Z0-9_-]+)/g, '<span class="mention">@$1</span>');
+      }
+
+      function toggleChannelRole(channelId) {
+        const selected = state.roleDraft.selectedChannelIds;
+        if (selected.includes(channelId)) {
+          state.roleDraft.selectedChannelIds = selected.filter((id) => id !== channelId);
+        } else {
+          state.roleDraft.selectedChannelIds = [...selected, channelId];
+        }
+        render();
+      }
+
+      function toggleChannelInitialRole(roleId) {
+        const selected = state.channelDraft.selectedRoleIds;
+        if (selected.includes(roleId)) {
+          state.channelDraft.selectedRoleIds = selected.filter((id) => id !== roleId);
+        } else {
+          state.channelDraft.selectedRoleIds = [...selected, roleId];
+        }
+        render();
+      }
+
+      function toggleAddRole(roleId) {
+        if (state.addRoleSelection.includes(roleId)) {
+          state.addRoleSelection = state.addRoleSelection.filter((id) => id !== roleId);
+        } else {
+          state.addRoleSelection = [...state.addRoleSelection, roleId];
+        }
+        render();
+      }
+
+      function chooseFolder() {
+        state.channelDraft.folderPath = "/Users/songhuiyu/Morrow";
+        render();
+      }
+
+      function clearFolder() {
+        state.channelDraft.folderPath = "";
+        render();
+      }
+
+      function refreshChannelCreateButton() {
+        const button = document.getElementById("create-channel-button");
+        if (button) button.disabled = !state.channelDraft.name.trim();
+      }
+
+      function refreshRoleCreateButton() {
+        const button = document.getElementById("create-role-button");
+        if (button) {
+          button.disabled = !(
+            state.roleDraft.name.trim() &&
+            state.roleDraft.intro.trim() &&
+            state.roleDraft.instruction.trim() &&
+            state.roleDraft.model
+          );
+        }
+      }
+
+      function openRole(roleId, tab = "chat") {
+        state.activeDrawerRoleId = roleId;
+        state.drawerTab = tab;
+        render();
+      }
+
+      function closeDrawer() {
+        state.activeDrawerRoleId = null;
+        render();
+      }
+
+      function sendRoleDirect(roleId) {
+        const input = document.getElementById("role-direct-input");
+        const role = getRole(roleId);
+        if (!input || !role || !input.value.trim()) return;
+        role.directMessages.push({ author: "user", text: escapeHtml(input.value.trim()) });
+        role.directMessages.push({
+          author: "role",
+          text: "我会基于自己的「指示」来回应。简介负责让你识别我，指示负责定义我怎么工作。",
+        });
+        render();
+      }
+
+      function saveRoleSettings(roleId) {
+        const role = getRole(roleId);
+        if (!role) return;
+        const name = document.getElementById("role-name-input").value.trim();
+        const intro = document.getElementById("role-intro-input").value.trim();
+        const instruction = document.getElementById("role-instruction-input").value.trim();
+        const model = document.getElementById("role-model-select").value;
+        if (!name || !intro || !instruction || !model) return;
+        role.name = name;
+        role.initials = initialsFromName(name);
+        role.intro = intro;
+        role.instruction = instruction;
+        role.model = model;
+        render();
+      }
+
+      function render() {
+        const channel = getChannel();
+        const direct = getDirect();
+        const membersClass = state.membersOpen && state.mode === "group" ? " members-open" : "";
+        root.innerHTML = `
+          <div class="app${membersClass}">
+            ${renderSidebar()}
+            <main class="shell">
+              ${renderTopbar()}
+              <section class="timeline">
+                <div class="timeline-inner">
+                  ${state.mode === "group" ? renderChannelMessages(channel) : renderDirectMessages(direct)}
+                </div>
+              </section>
+              ${renderComposer(channel)}
+            </main>
+            ${renderMembersPanel(channel)}
+          </div>
+          ${renderModal()}
+          ${renderDrawer()}
+        `;
+      }
+
+      function renderSidebar() {
+        return `
+          <aside class="sidebar">
+            <div class="traffic"><i></i><i></i><i></i></div>
+            <div class="workspace">
+              <div class="workspace-mark">D</div>
+              <div>
+                <strong>Morrow Workspace</strong>
+                <span>本地个人工作空间</span>
+              </div>
+            </div>
+            <div class="primary-actions">
+              <button class="action-button" onclick="createDirect()">+ 新建对话</button>
+              <button class="action-button" onclick="openModal('channel')"># 新建群聊</button>
+            </div>
+            <section class="section">
+              <div class="section-head"><span>个人对话</span></div>
+              <div class="section-list">
+                ${state.directs
+                  .map(
+                    (direct) => `
+                      <button class="nav-row ${state.mode === "direct" && state.activeDirectId === direct.id ? "active" : ""}" onclick="setMode('direct', '${direct.id}')">
+                        <span class="hash">•</span>
+                        <span class="row-main">
+                          <span class="row-title">${escapeHtml(direct.title)}</span>
+                          <span class="row-subtitle">${escapeHtml(direct.model)}</span>
+                        </span>
+                      </button>
+                    `,
+                  )
+                  .join("")}
+              </div>
+            </section>
+            <section class="section">
+              <div class="section-head">
+                <span>群聊频道</span>
+                <button class="icon-button" onclick="openModal('channel')" aria-label="新建群聊">+</button>
+              </div>
+              <div class="section-list">
+                ${
+                  state.channels.length
+                    ? state.channels
+                        .map(
+                          (item) => `
+                            <button class="nav-row ${state.mode === "group" && state.activeChannelId === item.id ? "active" : ""}" onclick="setMode('group', '${item.id}')">
+                              <span class="hash">#</span>
+                              <span class="row-main">
+                                <span class="row-title">${escapeHtml(item.name)}</span>
+                                <span class="row-subtitle">${item.folderPath ? escapeHtml(item.folderPath) : "未绑定文件夹"}</span>
+                              </span>
+                              <span class="count">${item.memberRoleIds.length}</span>
+                            </button>
+                          `,
+                        )
+                        .join("")
+                    : '<div class="empty-state">还没有群聊。<br />先新建一个频道，再邀请 AI 队友。</div>'
+                }
+              </div>
+            </section>
+            <section class="section">
+              <div class="section-head">
+                <span>AI 队友</span>
+                <button class="icon-button" onclick="openModal('role')" aria-label="新建角色">+</button>
+              </div>
+              <div class="section-list">
+                ${state.roles
+                  .map(
+                    (role) => `
+                      <button class="role-row ${state.activeDrawerRoleId === role.id ? "active" : ""}" onclick="openRole('${role.id}')">
+                        <span class="role-avatar" data-tone="${role.tone}">${escapeHtml(role.initials)}</span>
+                        <span class="row-main">
+                          <span class="row-title">${escapeHtml(role.name)} <span class="ai-pill">AI</span></span>
+                          <span class="row-subtitle">${escapeHtml(role.model)}</span>
+                        </span>
+                        <span class="count">${roleChannels(role.id).length}</span>
+                      </button>
+                    `,
+                  )
+                  .join("")}
+              </div>
+            </section>
+            <div class="sidebar-footer">
+              <div class="person-avatar">S</div>
+              <div>
+                <div>stephen s</div>
+                <div class="row-subtitle">online</div>
+              </div>
+            </div>
+          </aside>
+        `;
+      }
+
+      function renderTopbar() {
+        const isGroup = state.mode === "group";
+        return `
+          <header class="topbar">
+            <div class="title-block">
+              <div class="title-line"><h1>${escapeHtml(currentTitle())}</h1></div>
+              <div class="subtitle">${escapeHtml(currentSubtitle())}</div>
+            </div>
+            <div class="topbar-actions">
+              ${
+                isGroup
+                  ? `
+                    <button class="ghost-button" onclick="openModal('add-role')" ${getChannel() ? "" : "disabled"}>添加角色</button>
+                    <button class="ghost-button members-toggle ${state.membersOpen ? "active" : ""}" onclick="state.membersOpen = !state.membersOpen; render()">${state.membersOpen ? "收起成员" : "频道成员"}</button>
+                  `
+                  : '<span class="model-pill">本地模型 · Claude Code</span>'
+              }
+              <button class="ghost-button" onclick="openModal('channel')">新建群聊</button>
+            </div>
+          </header>
+        `;
+      }
+
+      function renderChannelMessages(channel) {
+        if (!channel) {
+          return `
+            <div class="empty-state">
+              还没有群聊频道。<br />
+              点击左侧“新建群聊”，选择一个本地文件夹，再邀请 AI 队友加入。
+            </div>
+          `;
+        }
+        return `
+          <div class="day-divider">Today</div>
+          ${channel.messages.map((message) => renderMessage(message)).join("")}
+        `;
+      }
+
+      function renderDirectMessages(direct) {
+        if (!direct) {
+          return '<div class="empty-state">还没有个人对话。</div>';
+        }
+        return `
+          <div class="day-divider">Today</div>
+          ${direct.messages.map((message) => renderMessage(message)).join("")}
+        `;
+      }
+
+      function renderMessage(message) {
+        if (message.type === "system") {
+          return `<div class="system-chip">${escapeHtml(message.text)}</div>`;
+        }
+        if (message.author === "user") {
+          return `
+            <article class="message">
+              <div class="message-avatar" data-tone="lime">S</div>
+              <div class="message-body">
+                <div class="message-meta"><span class="message-name">stephen s</span><span class="message-time">${message.time || ""}</span></div>
+                <div class="message-text">${message.text}</div>
+              </div>
+            </article>
+          `;
+        }
+        if (message.author === "assistant") {
+          return `
+            <article class="message">
+              <div class="message-avatar" data-tone="blue">CC</div>
+              <div class="message-body">
+                <div class="message-meta"><span class="message-name">Claude Code</span><span class="message-time">${message.time || ""}</span></div>
+                <div class="message-text">${message.text}</div>
+              </div>
+            </article>
+          `;
+        }
+        const role = getRole(message.author);
+        if (!role) return "";
+        return `
+          <article class="message">
+            <button class="message-avatar" data-tone="${role.tone}" onclick="openRole('${role.id}')">${escapeHtml(role.initials)}</button>
+            <div class="message-body">
+              <div class="message-meta">
+                <span class="message-name">${escapeHtml(role.name)}</span>
+                <span class="ai-pill">AI</span>
+                <span class="message-time">${message.time || ""}</span>
+              </div>
+              <div class="message-text">${message.text}</div>
+            </div>
+          </article>
+        `;
+      }
+
+      function renderComposer(channel) {
+        const memberRoles = state.mode === "group" && channel
+          ? channel.memberRoleIds.map((roleId) => getRole(roleId)).filter(Boolean)
+          : [];
+        return `
+          <div class="composer-wrap">
+            <div class="composer">
+              <textarea id="composer-input" placeholder="${state.mode === "group" ? "@角色名 提问，或直接发到群里" : "输入你的问题"}" oninput="state.draft = this.value">${escapeHtml(state.draft)}</textarea>
+              <div class="composer-bottom">
+                <div class="quick-mentions">
+                  ${
+                    memberRoles.length
+                      ? memberRoles
+                          .map((role) => `<button class="mention-chip" onclick="appendMention('${role.id}')">@${escapeHtml(role.name)}</button>`)
+                          .join("")
+                      : state.mode === "group"
+                        ? '<span class="composer-hint">这个频道还没有 AI 队友</span>'
+                        : '<span class="composer-hint">个人对话</span>'
+                  }
+                </div>
+                <div class="topbar-actions">
+                  <span class="composer-hint">Enter 发送</span>
+                  <button class="send-button" onclick="sendMessage()">发送</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderMembersPanel(channel) {
+        if (state.mode !== "group") return "";
+        const roles = channel ? channel.memberRoleIds.map((roleId) => getRole(roleId)).filter(Boolean) : [];
+        return `
+          <aside class="members-panel">
+            <div class="members-head">
+              <strong>频道成员</strong>
+              <div class="topbar-actions">
+                <button class="icon-button" onclick="openModal('add-role')" aria-label="添加角色">+</button>
+                <button class="ghost-button" onclick="state.membersOpen = false; render()">收起</button>
+              </div>
+            </div>
+            <div class="members-list">
+              ${
+                roles.length
+                  ? roles
+                      .map(
+                        (role) => `
+                          <button class="member-card" onclick="openRole('${role.id}')">
+                            <span class="member-card-head">
+                              <span class="role-avatar" data-tone="${role.tone}">${escapeHtml(role.initials)}</span>
+                              <span>
+                                <strong>${escapeHtml(role.name)} <span class="ai-pill">AI</span></strong>
+                                <small>${escapeHtml(role.model)}</small>
+                              </span>
+                            </span>
+                            <p>${escapeHtml(role.intro)}</p>
+                          </button>
+                        `,
+                      )
+                      .join("")
+                  : '<div class="empty-state">还没有 AI 队友。<br />点击 + 添加角色。</div>'
+              }
+            </div>
+          </aside>
+        `;
+      }
+
+      function renderModal() {
+        if (!state.modal) return "";
+        if (state.modal === "channel") return renderChannelModal();
+        if (state.modal === "role") return renderRoleModal();
+        if (state.modal === "add-role") return renderAddRoleModal();
+        return "";
+      }
+
+      function modalShell(title, body, footer) {
+        return `
+          <div class="modal-layer open">
+            <div class="scrim" onclick="closeModal()"></div>
+            <section class="modal">
+              <header class="modal-head">
+                <h2>${title}</h2>
+                <button class="icon-button" onclick="closeModal()" aria-label="关闭">x</button>
+              </header>
+              <div class="modal-body">${body}</div>
+              <footer class="modal-foot">${footer}</footer>
+            </section>
+          </div>
+        `;
+      }
+
+      function renderChannelModal() {
+        const body = `
+          <div class="field">
+            <label for="channel-name">群聊名称</label>
+            <input id="channel-name" class="input" placeholder="例如 design-review" value="${escapeHtml(state.channelDraft.name)}" oninput="state.channelDraft.name = this.value; refreshChannelCreateButton()" />
+          </div>
+          <div class="field">
+            <label for="channel-desc">简介</label>
+            <textarea id="channel-desc" class="textarea" placeholder="这个群聊用来讨论什么？" oninput="state.channelDraft.description = this.value">${escapeHtml(state.channelDraft.description)}</textarea>
+          </div>
+          <div class="field">
+            <div class="field-title">绑定本地文件夹</div>
+            <div class="field-hint">真实产品里这里应打开系统文件夹选择器；原型中点击后模拟选择当前 Morrow 仓库。</div>
+            <div class="folder-control">
+              <div class="folder-row">
+                <div class="folder-path ${state.channelDraft.folderPath ? "" : "folder-placeholder"}">
+                  ${state.channelDraft.folderPath ? escapeHtml(state.channelDraft.folderPath) : "尚未选择文件夹"}
+                </div>
+                <div class="topbar-actions">
+                  <button class="ghost-button" onclick="chooseFolder()">选择本地文件夹...</button>
+                  <button class="ghost-button" onclick="clearFolder()" ${state.channelDraft.folderPath ? "" : "disabled"}>清除</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="field">
+            <div class="field-title">初始 AI 队友</div>
+            <div class="check-list">
+              ${state.roles
+                .map(
+                  (role) => `
+                    <button class="check-row ${state.channelDraft.selectedRoleIds.includes(role.id) ? "active" : ""}" onclick="toggleChannelInitialRole('${role.id}')">
+                      <span class="check-box"></span>
+                      <span class="role-avatar" data-tone="${role.tone}">${escapeHtml(role.initials)}</span>
+                      <span>
+                        <strong>${escapeHtml(role.name)}</strong>
+                        <small>${escapeHtml(role.intro)}</small>
+                      </span>
+                    </button>
+                  `,
+                )
+                .join("")}
+            </div>
+          </div>
+        `;
+        const footer = `
+          <button class="ghost-button" onclick="closeModal()">取消</button>
+          <button id="create-channel-button" class="accent-button ghost-button" onclick="createChannel()" ${state.channelDraft.name.trim() ? "" : "disabled"}>创建群聊</button>
+        `;
+        return modalShell("新建群聊", body, footer);
+      }
+
+      function renderRoleModal() {
+        const channelChoices = state.channels.length
+          ? `
+            <div class="check-list">
+              ${state.channels
+                .map(
+                  (channel) => `
+                    <button class="check-row ${state.roleDraft.selectedChannelIds.includes(channel.id) ? "active" : ""}" onclick="toggleChannelRole('${channel.id}')">
+                      <span class="check-box"></span>
+                      <span class="hash">#</span>
+                      <span>
+                        <strong>${escapeHtml(channel.name)}</strong>
+                        <small>${channel.folderPath ? escapeHtml(channel.folderPath) : "未绑定文件夹"}</small>
+                      </span>
+                    </button>
+                  `,
+                )
+                .join("")}
+            </div>
+          `
+          : '<div class="notice">当前还没有群聊频道。可以先创建角色；之后在群聊里点击“添加角色”把它加入。</div>';
+        const body = `
+          <div class="field">
+            <label for="role-name">显示名称</label>
+            <input id="role-name" class="input" placeholder="例如 设计师" value="${escapeHtml(state.roleDraft.name)}" oninput="state.roleDraft.name = this.value; refreshRoleCreateButton()" />
+          </div>
+          <div class="field">
+            <div class="field-title">模型</div>
+            <div class="choice-grid">
+              ${["Claude Code", "Codex"]
+                .map(
+                  (model) => `
+                    <button class="choice-card ${state.roleDraft.model === model ? "active" : ""}" onclick="state.roleDraft.model = '${model}'; render()">
+                      <span class="radio-dot"></span>
+                      <span>
+                        <strong>${model}</strong>
+                        <small class="row-subtitle">调用本地可用模型</small>
+                      </span>
+                    </button>
+                  `,
+                )
+                .join("")}
+            </div>
+          </div>
+          <div class="field">
+            <label for="role-intro">简介</label>
+            <textarea id="role-intro" class="textarea" placeholder="一句话说明这个角色负责什么、什么时候应该 @ 它。" oninput="state.roleDraft.intro = this.value; refreshRoleCreateButton()">${escapeHtml(state.roleDraft.intro)}</textarea>
+          </div>
+          <div class="field">
+            <label for="role-instruction">指示</label>
+            <div class="field-hint">这里是这个角色真正的 prompt。Morrow 调用本地模型时，应把它作为角色行为定义传入。</div>
+            <textarea id="role-instruction" class="textarea" placeholder="写清楚这个角色的职责、工作方式、输出格式、边界和偏好。" oninput="state.roleDraft.instruction = this.value; refreshRoleCreateButton()">${escapeHtml(state.roleDraft.instruction)}</textarea>
+          </div>
+          <div class="field">
+            <div class="field-title">加入群聊</div>
+            ${channelChoices}
+          </div>
+        `;
+        const enabled =
+          state.roleDraft.name.trim() &&
+          state.roleDraft.intro.trim() &&
+          state.roleDraft.instruction.trim() &&
+          state.roleDraft.model;
+        const footer = `
+          <button class="ghost-button" onclick="closeModal()">取消</button>
+          <button id="create-role-button" class="accent-button ghost-button" onclick="createRole()" ${enabled ? "" : "disabled"}>创建角色</button>
+        `;
+        return modalShell("新建 AI 队友", body, footer);
+      }
+
+      function renderAddRoleModal() {
+        const channel = getChannel();
+        const available = channel
+          ? state.roles.filter((role) => !channel.memberRoleIds.includes(role.id))
+          : [];
+        const body = channel
+          ? available.length
+            ? `
+              <div class="field">
+                <div class="field-title">选择要加入 #${escapeHtml(channel.name)} 的角色</div>
+                <div class="check-list">
+                  ${available
+                    .map(
+                      (role) => `
+                        <button class="check-row ${state.addRoleSelection.includes(role.id) ? "active" : ""}" onclick="toggleAddRole('${role.id}')">
+                          <span class="check-box"></span>
+                          <span class="role-avatar" data-tone="${role.tone}">${escapeHtml(role.initials)}</span>
+                          <span>
+                            <strong>${escapeHtml(role.name)}</strong>
+                            <small>${escapeHtml(role.intro)}</small>
+                          </span>
+                        </button>
+                      `,
+                    )
+                    .join("")}
+                </div>
+              </div>
+            `
+            : '<div class="empty-state">所有已有角色都已经在这个频道里。可以先新建一个角色。</div>'
+          : '<div class="empty-state">请先选择一个群聊频道。</div>';
+        const footer = `
+          <button class="ghost-button" onclick="openModal('role')">新建角色</button>
+          <button class="ghost-button" onclick="closeModal()">取消</button>
+          <button class="accent-button ghost-button" onclick="addRolesToChannel()" ${state.addRoleSelection.length ? "" : "disabled"}>加入频道</button>
+        `;
+        return modalShell("添加角色到群聊", body, footer);
+      }
+
+      function renderDrawer() {
+        const role = getRole(state.activeDrawerRoleId);
+        if (!role) return "";
+        return `
+          <div class="drawer-layer open">
+            <div class="scrim" onclick="closeDrawer()"></div>
+            <aside class="drawer">
+              <header class="drawer-head">
+                <div class="role-avatar" data-tone="${role.tone}">${escapeHtml(role.initials)}</div>
+                <div class="drawer-title">
+                  <h2>${escapeHtml(role.name)} <span class="ai-pill">AI</span></h2>
+                  <div class="model-pill">${escapeHtml(role.model)}</div>
+                  <p>${escapeHtml(role.intro)}</p>
+                </div>
+                <button class="icon-button" onclick="closeDrawer()" aria-label="关闭">x</button>
+              </header>
+              <nav class="drawer-tabs">
+                <button class="tab ${state.drawerTab === "chat" ? "active" : ""}" onclick="state.drawerTab = 'chat'; render()">Chat</button>
+                <button class="tab ${state.drawerTab === "settings" ? "active" : ""}" onclick="state.drawerTab = 'settings'; render()">Settings</button>
+              </nav>
+              <div class="drawer-body">
+                ${state.drawerTab === "chat" ? renderDrawerChat(role) : renderDrawerSettings(role)}
+              </div>
+            </aside>
+          </div>
+        `;
+      }
+
+      function renderDrawerChat(role) {
+        return `
+          <div class="drawer-chat">
+            <div class="mini-thread">
+              ${role.directMessages
+                .map(
+                  (message) => `
+                    <div class="mini-message ${message.author === "user" ? "user" : ""}">
+                      ${message.author === "user" ? "你：" : `${escapeHtml(role.name)}：`}${message.text}
+                    </div>
+                  `,
+                )
+                .join("")}
+            </div>
+            <div class="inline-composer">
+              <input id="role-direct-input" class="input" placeholder="单独问 ${escapeHtml(role.name)}" />
+              <button class="send-button" onclick="sendRoleDirect('${role.id}')">发送</button>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderDrawerSettings(role) {
+        const joined = roleChannels(role.id);
+        return `
+          <div class="settings-grid">
+            <div class="field">
+              <label for="role-name-input">显示名称</label>
+              <input id="role-name-input" class="input" value="${escapeHtml(role.name)}" />
+            </div>
+            <div class="field">
+              <label for="role-model-select">模型</label>
+              <select id="role-model-select" class="select">
+                ${["Claude Code", "Codex"]
+                  .map((model) => `<option value="${model}" ${role.model === model ? "selected" : ""}>${model}</option>`)
+                  .join("")}
+              </select>
+            </div>
+            <div class="field">
+              <label for="role-intro-input">简介</label>
+              <textarea id="role-intro-input" class="textarea">${escapeHtml(role.intro)}</textarea>
+            </div>
+            <div class="field">
+              <label for="role-instruction-input">指示</label>
+              <div class="field-hint">这个文本会作为角色 prompt 使用，用户可以随时查看和修改。</div>
+              <textarea id="role-instruction-input" class="textarea">${escapeHtml(role.instruction || "")}</textarea>
+            </div>
+            <div class="field">
+              <div class="field-title">加入的群聊</div>
+              <div class="joined-list">
+                ${
+                  joined.length
+                    ? joined.map((channel) => `<span class="folder-pill">#${escapeHtml(channel.name)}</span>`).join("")
+                    : '<span class="field-hint">尚未加入任何群聊。</span>'
+                }
+              </div>
+            </div>
+            <button class="accent-button ghost-button" onclick="saveRoleSettings('${role.id}')">保存设置</button>
+          </div>
+        `;
+      }
+
+      window.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          if (state.modal) closeModal();
+          else if (state.activeDrawerRoleId) closeDrawer();
+        }
+        if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+          sendMessage();
+        }
+      });
+
+      render();
+    </script>
+  </body>
+</html>

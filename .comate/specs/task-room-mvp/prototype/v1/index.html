@@ -1,0 +1,2003 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Morrow Task Room MVP Prototype</title>
+    <style>
+      :root {
+        --bg: #0b0b0d;
+        --panel: #111114;
+        --panel-2: #15151a;
+        --panel-3: #1b1b21;
+        --line: #1f1f23;
+        --line-strong: #2a2a30;
+        --text: #e6e6e6;
+        --text-2: #c8c8cc;
+        --muted: #8a8a93;
+        --disabled: #5a5a62;
+        --accent: #a3e635;
+        --accent-hi: #b8f04e;
+        --accent-bg: rgba(163, 230, 53, 0.08);
+        --error: #f97066;
+        --warning: #f4c430;
+        --ok: #a3e635;
+        --radius: 10px;
+        --mono: ui-monospace, "JetBrains Mono", SFMono-Regular, Menlo, monospace;
+        --sans: -apple-system, BlinkMacSystemFont, "Inter", "Noto Sans SC", "PingFang SC",
+          sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--sans);
+        -webkit-font-smoothing: antialiased;
+        overflow: hidden;
+      }
+
+      button,
+      textarea,
+      input {
+        font: inherit;
+      }
+
+      button {
+        cursor: pointer;
+      }
+
+      .window {
+        width: 100%;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background: var(--bg);
+      }
+
+      .top {
+        height: 44px;
+        flex: 0 0 44px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 14px 0 88px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .top .title {
+        flex: 1;
+        text-align: center;
+        font-size: 13px;
+        color: var(--text);
+        font-weight: 500;
+        font-family: var(--mono);
+      }
+
+      .traffic {
+        position: absolute;
+        left: 16px;
+        top: 16px;
+        display: flex;
+        gap: 8px;
+      }
+
+      .traffic span {
+        width: 12px;
+        height: 12px;
+        border-radius: 999px;
+        background: var(--line-strong);
+      }
+
+      .traffic span:nth-child(1) {
+        background: #ff5f57;
+      }
+
+      .traffic span:nth-child(2) {
+        background: #ffbd2e;
+      }
+
+      .traffic span:nth-child(3) {
+        background: #28c840;
+      }
+
+      .rt-badge {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 6px;
+        background: var(--panel-2);
+        border: 1px solid var(--line);
+        font-size: 12px;
+        color: var(--text-2);
+      }
+
+      .dot-ok {
+        width: 6px;
+        height: 6px;
+        border-radius: 999px;
+        background: var(--ok);
+        box-shadow: 0 0 6px rgba(163, 230, 53, 0.5);
+      }
+
+      .layout {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+      }
+
+      .sidebar {
+        width: 280px;
+        flex: 0 0 280px;
+        border-right: 1px solid var(--line);
+        background: var(--panel);
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+      }
+
+      .workspace-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 18px 16px 14px;
+      }
+
+      .workspace-mark,
+      .role-avatar,
+      .channel-avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        background: var(--accent);
+        color: var(--bg);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--mono);
+        font-size: 12px;
+        font-weight: 700;
+        flex: 0 0 auto;
+      }
+
+      .workspace-brand strong {
+        display: block;
+        font-size: 14px;
+      }
+
+      .workspace-brand span {
+        display: block;
+        margin-top: 2px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .sidebar-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 0 12px 12px;
+      }
+
+      .sidebar-new {
+        height: 34px;
+        border: 1px dashed var(--line-strong);
+        background: transparent;
+        color: var(--text-2);
+        border-radius: 8px;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+      }
+
+      .sidebar-new:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+        background: var(--accent-bg);
+      }
+
+      .sidebar-group {
+        border-top: 1px solid var(--line);
+        min-height: 0;
+      }
+
+      .sidebar-group.flex {
+        flex: 1;
+      }
+
+      .sidebar-group-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 14px 6px;
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--muted);
+        letter-spacing: 0.02em;
+      }
+
+      .sidebar-list {
+        overflow-y: auto;
+        padding: 0 10px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+
+      .sidebar-channel-row,
+      .sidebar-role {
+        border-radius: 8px;
+        color: var(--text-2);
+      }
+
+      .sidebar-channel-row.active,
+      .sidebar-role.active {
+        background: var(--panel-3);
+        color: var(--text);
+      }
+
+      .sidebar-channel,
+      .sidebar-role {
+        width: 100%;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        text-align: left;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 10px;
+      }
+
+      .sidebar-channel-row:hover,
+      .sidebar-role:hover {
+        background: var(--panel-2);
+        color: var(--text);
+      }
+
+      .channel-hash {
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 18px;
+      }
+
+      .sidebar-channel-main,
+      .sidebar-role-main {
+        min-width: 0;
+        flex: 1;
+      }
+
+      .sidebar-channel-main strong,
+      .sidebar-role-main strong {
+        display: block;
+        font-size: 13px;
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .sidebar-channel-main em,
+      .sidebar-role-main em {
+        display: block;
+        margin-top: 2px;
+        color: var(--muted);
+        font-size: 11px;
+        font-family: var(--mono);
+        font-style: normal;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .layout-main {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+      }
+
+      .task-shell {
+        flex: 1;
+        min-height: 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 360px;
+      }
+
+      .task-main {
+        min-width: 0;
+        min-height: 0;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .channel-header {
+        height: 64px;
+        flex: 0 0 64px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 0 28px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .channel-header h1 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 700;
+      }
+
+      .channel-header p {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 12px;
+        font-family: var(--mono);
+        max-width: 640px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        height: 32px;
+        padding: 0 14px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        border: 1px solid var(--line-strong);
+        background: transparent;
+        color: var(--text);
+      }
+
+      .btn:hover {
+        background: var(--panel-2);
+      }
+
+      .btn.primary {
+        background: var(--accent);
+        color: #0b0b0d;
+        border-color: var(--accent);
+      }
+
+      .btn.primary:hover {
+        background: var(--accent-hi);
+        border-color: var(--accent-hi);
+      }
+
+      .btn.danger {
+        color: var(--error);
+      }
+
+      .btn.small {
+        height: 28px;
+        padding: 0 10px;
+        font-size: 12px;
+      }
+
+      .icon-btn {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        border: 1px solid var(--line-strong);
+        background: transparent;
+        color: var(--text-2);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .icon-btn:hover {
+        color: var(--text);
+        background: var(--panel-2);
+      }
+
+      .stream {
+        flex: 1;
+        min-height: 0;
+        overflow: auto;
+        padding: 24px 0 230px;
+      }
+
+      .stream::-webkit-scrollbar,
+      .side-panel::-webkit-scrollbar,
+      .sidebar-list::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .stream::-webkit-scrollbar-thumb,
+      .side-panel::-webkit-scrollbar-thumb,
+      .sidebar-list::-webkit-scrollbar-thumb {
+        background: var(--line-strong);
+        border-radius: 4px;
+      }
+
+      .stream-inner {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 0 32px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .channel-message {
+        display: grid;
+        grid-template-columns: 36px minmax(0, 1fr);
+        gap: 14px;
+      }
+
+      .channel-message .channel-avatar {
+        width: 30px;
+        height: 30px;
+        border: 0;
+      }
+
+      .channel-message .user-avatar {
+        background: var(--panel-3);
+        color: var(--text);
+      }
+
+      .message-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 30px;
+      }
+
+      .message-head strong {
+        color: var(--text);
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .ai-chip,
+      .mention-token,
+      .status-chip {
+        color: var(--accent);
+        border: 1px solid var(--accent);
+        background: var(--accent-bg);
+        border-radius: 5px;
+        font-family: var(--mono);
+        font-size: 11px;
+        padding: 1px 5px;
+      }
+
+      .status-chip {
+        color: var(--muted);
+        border-color: var(--line-strong);
+        background: var(--panel-2);
+      }
+
+      .status-chip.on {
+        color: var(--accent);
+        border-color: var(--accent);
+        background: var(--accent-bg);
+      }
+
+      .message-body {
+        color: var(--text-2);
+        font-size: 14px;
+        line-height: 1.7;
+        white-space: pre-wrap;
+      }
+
+      .message-body strong {
+        color: var(--text);
+      }
+
+      .system-pill {
+        align-self: center;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        color: var(--muted);
+        font-size: 12px;
+        padding: 5px 12px;
+        font-family: var(--mono);
+      }
+
+      .handoff-card,
+      .artifact-inline,
+      .risk-card {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--panel);
+        padding: 14px;
+      }
+
+      .handoff-card {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 16px;
+        align-items: center;
+      }
+
+      .handoff-title,
+      .artifact-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text);
+      }
+
+      .handoff-card p,
+      .artifact-inline p,
+      .risk-card p {
+        margin: 7px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      .progress-line {
+        height: 3px;
+        border-radius: 999px;
+        background: var(--line);
+        overflow: hidden;
+        margin-top: 10px;
+      }
+
+      .progress-line span {
+        display: block;
+        height: 100%;
+        width: 100%;
+        background: var(--accent);
+        transform-origin: left;
+        animation: fill 1.4s linear forwards;
+      }
+
+      @keyframes fill {
+        from {
+          transform: scaleX(0);
+        }
+        to {
+          transform: scaleX(1);
+        }
+      }
+
+      .artifact-inline {
+        margin-left: 50px;
+      }
+
+      .artifact-inline .artifact-title span:first-child {
+        color: var(--accent);
+        font-family: var(--mono);
+      }
+
+      .composer-wrap {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        padding: 18px 32px 22px;
+        border-top: 1px solid var(--line);
+        background: var(--bg);
+        display: flex;
+        justify-content: center;
+      }
+
+      .composer {
+        width: min(900px, 100%);
+        position: relative;
+        border: 1px solid var(--line-strong);
+        border-radius: 12px;
+        background: var(--panel);
+        padding: 10px;
+      }
+
+      .composer textarea {
+        width: 100%;
+        min-height: 72px;
+        max-height: 160px;
+        resize: vertical;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: var(--text);
+        font-size: 14px;
+        line-height: 1.55;
+        padding: 4px;
+      }
+
+      .composer textarea::placeholder {
+        color: var(--disabled);
+      }
+
+      .composer-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-top: 1px solid var(--line);
+        padding-top: 8px;
+      }
+
+      .composer-hint {
+        flex: 1;
+        color: var(--muted);
+        font-size: 11px;
+        font-family: var(--mono);
+      }
+
+      .mention-menu {
+        position: absolute;
+        left: 12px;
+        bottom: 52px;
+        width: 340px;
+        border: 1px solid var(--line-strong);
+        border-radius: 10px;
+        background: var(--panel);
+        padding: 6px;
+        z-index: 10;
+        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+      }
+
+      .mention-item {
+        width: 100%;
+        border: 0;
+        background: transparent;
+        color: var(--text-2);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-radius: 8px;
+        padding: 8px;
+        text-align: left;
+      }
+
+      .mention-item:hover,
+      .mention-item.active {
+        background: var(--panel-3);
+        color: var(--text);
+      }
+
+      .mention-main {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .mention-name {
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .mention-intro {
+        color: var(--muted);
+        font-size: 12px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .side-panel {
+        border-left: 1px solid var(--line);
+        background: var(--panel);
+        min-width: 0;
+        overflow: auto;
+      }
+
+      .side-head {
+        height: 52px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 16px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .side-head h2 {
+        margin: 0;
+        font-size: 13px;
+      }
+
+      .side-section {
+        padding: 14px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .side-label {
+        margin: 0 0 9px;
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+      }
+
+      .task-summary {
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+      }
+
+      .task-summary strong {
+        font-size: 14px;
+      }
+
+      .task-summary p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 12.5px;
+        line-height: 1.55;
+      }
+
+      .policy-row,
+      .step-row,
+      .artifact-row,
+      .role-row {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+      }
+
+      .policy-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .policy-row {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel-2);
+        padding: 9px;
+      }
+
+      .policy-row span:first-child {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--accent);
+        flex: 0 0 44px;
+      }
+
+      .policy-row strong {
+        display: block;
+        font-size: 12.5px;
+      }
+
+      .policy-row em {
+        display: block;
+        margin-top: 3px;
+        color: var(--muted);
+        font-size: 11.5px;
+        font-style: normal;
+        line-height: 1.45;
+      }
+
+      .step-list,
+      .artifact-list,
+      .role-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .step-row,
+      .artifact-row,
+      .role-row {
+        border-radius: 8px;
+        padding: 8px;
+      }
+
+      .step-row.active,
+      .artifact-row.active,
+      .role-row.active {
+        background: var(--panel-3);
+      }
+
+      .step-dot {
+        width: 18px;
+        height: 18px;
+        border-radius: 999px;
+        border: 1px solid var(--line-strong);
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        margin-top: 1px;
+      }
+
+      .step-row.done .step-dot {
+        border-color: var(--accent);
+        color: var(--bg);
+        background: var(--accent);
+      }
+
+      .step-row.running .step-dot {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      .step-row strong,
+      .artifact-row strong,
+      .role-row strong {
+        display: block;
+        font-size: 12.5px;
+        color: var(--text-2);
+      }
+
+      .step-row em,
+      .artifact-row em,
+      .role-row em {
+        display: block;
+        margin-top: 3px;
+        color: var(--muted);
+        font-size: 11.5px;
+        line-height: 1.4;
+        font-style: normal;
+      }
+
+      .artifact-row {
+        border: 0;
+        width: 100%;
+        background: transparent;
+        color: inherit;
+        text-align: left;
+      }
+
+      .artifact-view {
+        margin-top: 10px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--bg);
+        padding: 10px;
+      }
+
+      .artifact-view h3 {
+        margin: 0 0 8px;
+        font-size: 13px;
+      }
+
+      .artifact-view pre {
+        margin: 0;
+        white-space: pre-wrap;
+        color: var(--text-2);
+        font-family: var(--sans);
+        font-size: 12px;
+        line-height: 1.55;
+      }
+
+      .start {
+        height: 100%;
+        overflow: auto;
+        padding: 42px;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+      }
+
+      .start-card {
+        width: min(860px, 100%);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: var(--panel);
+        padding: 18px;
+      }
+
+      .start-card h1 {
+        margin: 0;
+        font-size: 24px;
+      }
+
+      .start-card .sub {
+        margin: 8px 0 18px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      .scenario-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+
+      .scenario {
+        min-height: 86px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--panel-2);
+        color: var(--text-2);
+        text-align: left;
+        padding: 12px;
+      }
+
+      .scenario.active,
+      .scenario:hover {
+        border-color: var(--accent);
+        background: var(--accent-bg);
+        color: var(--text);
+      }
+
+      .scenario strong {
+        display: block;
+        font-size: 13px;
+      }
+
+      .scenario span {
+        display: block;
+        margin-top: 7px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .start-composer {
+        border: 1px solid var(--line-strong);
+        border-radius: 12px;
+        background: var(--bg);
+        padding: 12px;
+      }
+
+      .start-composer textarea {
+        width: 100%;
+        min-height: 112px;
+        resize: vertical;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: var(--text);
+        font-size: 14px;
+        line-height: 1.6;
+      }
+
+      .start-row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        border-top: 1px solid var(--line);
+        padding-top: 10px;
+      }
+
+      .start-row .hint {
+        flex: 1;
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 11px;
+      }
+
+      .preview-note {
+        margin-top: 12px;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .preview-note div {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 10px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .preview-note strong {
+        display: block;
+        margin-bottom: 5px;
+        color: var(--text-2);
+        font-size: 12.5px;
+      }
+
+      .state-toggle {
+        display: flex;
+        gap: 4px;
+        padding: 4px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+      }
+
+      .state-toggle button {
+        height: 24px;
+        border: 0;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 11px;
+        padding: 0 8px;
+      }
+
+      .state-toggle button.active {
+        background: var(--panel-3);
+        color: var(--text);
+      }
+
+      .empty-state,
+      .loading-state,
+      .error-state {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px;
+        text-align: center;
+      }
+
+      .empty-state h1,
+      .loading-state h1,
+      .error-state h1 {
+        margin: 0 0 8px;
+        font-size: 22px;
+      }
+
+      .empty-state p,
+      .loading-state p,
+      .error-state p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      .skeleton {
+        width: min(720px, 100%);
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .sk-line {
+        height: 14px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--panel), var(--panel-3), var(--panel));
+        background-size: 240% 100%;
+        animation: shimmer 1.2s linear infinite;
+      }
+
+      @keyframes shimmer {
+        from {
+          background-position: 100% 0;
+        }
+        to {
+          background-position: -100% 0;
+        }
+      }
+
+      .error-state .risk-card {
+        max-width: 520px;
+        text-align: left;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      @media (max-width: 1120px) {
+        .sidebar {
+          width: 248px;
+          flex-basis: 248px;
+        }
+
+        .task-shell {
+          grid-template-columns: minmax(0, 1fr) 320px;
+        }
+
+        .scenario-grid,
+        .preview-note {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 860px) {
+        body {
+          overflow: auto;
+        }
+
+        .window {
+          min-height: 100vh;
+          height: auto;
+        }
+
+        .layout,
+        .task-shell {
+          display: block;
+        }
+
+        .sidebar {
+          width: 100%;
+          min-height: auto;
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+        }
+
+        .task-main {
+          min-height: 720px;
+        }
+
+        .side-panel {
+          border-left: 0;
+          border-top: 1px solid var(--line);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="window">
+      <div class="traffic" aria-hidden="true"><span></span><span></span><span></span></div>
+      <header class="top">
+        <div class="title">Morrow · Task Room MVP Prototype</div>
+        <div class="rt-badge"><span class="dot-ok"></span> Claude Code</div>
+        <div class="rt-badge"><span class="dot-ok"></span> Codex</div>
+      </header>
+      <div class="layout">
+        <aside class="sidebar">
+          <div class="workspace-brand">
+            <div class="workspace-mark">D</div>
+            <div>
+              <strong>Morrow</strong>
+              <span>本地任务工作台</span>
+            </div>
+          </div>
+          <div class="sidebar-actions">
+            <button id="newTaskBtn" class="sidebar-new" type="button"><span>+</span> 新建任务群聊</button>
+          </div>
+          <section class="sidebar-group flex">
+            <div class="sidebar-group-header">TASK ROOMS <span id="taskCount">0</span></div>
+            <div id="taskList" class="sidebar-list"></div>
+          </section>
+          <section class="sidebar-group">
+            <div class="sidebar-group-header">ROLE LIBRARY <span id="savedCount">0</span></div>
+            <div id="savedRoles" class="sidebar-list">
+              <div class="sidebar-role">
+                <span class="role-avatar">任</span>
+                <span class="sidebar-role-main">
+                  <strong>任务助手</strong>
+                  <em>系统内置 · 不需要手动创建</em>
+                </span>
+              </div>
+            </div>
+          </section>
+        </aside>
+        <main class="layout-main">
+          <section id="startView" class="start">
+            <div class="start-card">
+              <h1>新建任务群聊</h1>
+              <p class="sub">
+                这里验证的是通用 Task Runtime：用户说目标，Morrow 自动理解、生成临时角色、按步骤推进，并把产物沉淀到右侧面板。下面三个例子共用同一套底层结构。
+              </p>
+              <div class="scenario-grid">
+                <button class="scenario active" data-scenario="dev" type="button">
+                  <strong>开发任务</strong>
+                  <span>自动 worktree / PR 只是 capability，不进入核心模型。</span>
+                </button>
+                <button class="scenario" data-scenario="film" type="button">
+                  <strong>电影创作</strong>
+                  <span>同样可以生成制片、编剧、分镜、审查角色。</span>
+                </button>
+                <button class="scenario" data-scenario="research" type="button">
+                  <strong>产品研究</strong>
+                  <span>用研究、洞察、方案、审查角色推进一个模糊问题。</span>
+                </button>
+              </div>
+              <div class="start-composer">
+                <textarea id="intentInput"></textarea>
+                <div class="start-row">
+                  <span class="hint">Enter 创建任务 · 创建后默认自动推进，可随时暂停、终止、@角色改方向</span>
+                  <button id="createTaskBtn" class="btn primary" type="button">创建任务群聊</button>
+                </div>
+              </div>
+              <div class="preview-note">
+                <div>
+                  <strong>群聊是界面</strong>
+                  角色发言、交接、系统事件都在流里出现，用户像看一个真实小组推进任务。
+                </div>
+                <div>
+                  <strong>Workflow 是真相</strong>
+                  @角色只是表达，底层靠结构化 Step / Handoff / Artifact 推进。
+                </div>
+                <div>
+                  <strong>角色默认临时</strong>
+                  每个任务生成一次角色，好用的角色可以在任务结束后固化到角色库。
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section id="taskView" class="task-shell hidden">
+            <section class="task-main">
+              <header class="channel-header">
+                <div>
+                  <h1 id="taskTitle">#task-room</h1>
+                  <p id="taskSubtitle">Task Runtime · 自动编排中</p>
+                </div>
+                <div class="header-actions">
+                  <div class="state-toggle" aria-label="状态预览">
+                    <button class="active" data-state="default" type="button">Default</button>
+                    <button data-state="empty" type="button">Empty</button>
+                    <button data-state="loading" type="button">Loading</button>
+                    <button data-state="error" type="button">Error</button>
+                  </div>
+                  <button id="pauseBtn" class="btn" type="button">暂停</button>
+                  <button id="nextBtn" class="btn" type="button">快进一步</button>
+                  <button id="stopBtn" class="btn danger" type="button">终止</button>
+                </div>
+              </header>
+
+              <div id="defaultState" class="stream">
+                <div id="streamInner" class="stream-inner"></div>
+              </div>
+
+              <div id="emptyState" class="empty-state hidden">
+                <div>
+                  <h1>还没有任务</h1>
+                  <p>Task Room 的 Empty 态应该直接引导用户描述目标，而不是先要求配置角色。</p>
+                </div>
+              </div>
+
+              <div id="loadingState" class="loading-state hidden">
+                <div class="skeleton">
+                  <div>
+                    <h1>正在生成任务房间</h1>
+                    <p>任务助手正在抽象目标、选择 workflow、生成临时角色。</p>
+                  </div>
+                  <div class="sk-line" style="width: 74%"></div>
+                  <div class="sk-line" style="width: 92%"></div>
+                  <div class="sk-line" style="width: 61%"></div>
+                  <div class="sk-line" style="width: 84%"></div>
+                </div>
+              </div>
+
+              <div id="errorState" class="error-state hidden">
+                <div class="risk-card">
+                  <div class="handoff-title"><span class="status-chip on">Blocked</span> 高风险动作需要确认</div>
+                  <p>
+                    示例：某个任务包试图执行 push / merge / 发布。MVP 中这类红色动作必须阻塞，并把原因、影响、可选路径展示清楚。
+                  </p>
+                  <div style="display: flex; gap: 8px; margin-top: 12px">
+                    <button class="btn primary" type="button">允许一次</button>
+                    <button class="btn" type="button">改为只生成方案</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="composer-wrap">
+                <div class="composer">
+                  <div id="mentionMenu" class="mention-menu hidden"></div>
+                  <textarea
+                    id="chatInput"
+                    placeholder="@角色名 介入任务，例如：@系统架构师 先别只考虑开发，确认电影任务也适用"
+                  ></textarea>
+                  <div class="composer-row">
+                    <span class="composer-hint">Enter 发送 · @ 后选择临时角色 · 用户消息会打断并重定向当前 workflow</span>
+                    <button id="sendBtn" class="btn primary" type="button">发送</button>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <aside class="side-panel">
+              <div class="side-head">
+                <h2>任务运行时</h2>
+                <span id="runStatus" class="status-chip on">自动推进中</span>
+              </div>
+              <section class="side-section">
+                <p class="side-label">Task Brief</p>
+                <div class="task-summary">
+                  <strong id="briefTitle">等待创建任务</strong>
+                  <p id="briefBody">用户输入一句模糊目标后，这里展示任务助手抽象出的目标、边界与验收标准。</p>
+                </div>
+              </section>
+              <section class="side-section">
+                <p class="side-label">Autonomy Policy</p>
+                <div class="policy-grid">
+                  <div class="policy-row">
+                    <span>GREEN</span>
+                    <div><strong>自动继续</strong><em>理解需求、生成角色、写方案、沉淀 artifact。</em></div>
+                  </div>
+                  <div class="policy-row">
+                    <span>YELLOW</span>
+                    <div><strong>默认可执行</strong><em>本地文件、测试、工具调用，按任务包配置。</em></div>
+                  </div>
+                  <div class="policy-row">
+                    <span>RED</span>
+                    <div><strong>必须阻塞</strong><em>push、merge、发布、删除、敏感凭证。</em></div>
+                  </div>
+                </div>
+              </section>
+              <section class="side-section">
+                <p class="side-label">Workflow Steps</p>
+                <div id="stepList" class="step-list"></div>
+              </section>
+              <section class="side-section">
+                <p class="side-label">Temporary Roles</p>
+                <div id="roleList" class="role-list"></div>
+              </section>
+              <section class="side-section">
+                <p class="side-label">Artifacts</p>
+                <div id="artifactList" class="artifact-list"></div>
+                <div id="artifactView" class="artifact-view hidden"></div>
+              </section>
+            </aside>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <script>
+      const scenarios = {
+        dev: {
+          title: "任务自治编排",
+          type: "Software Task Pack",
+          prompt:
+            "我想做一个开发过程中，新建每一个对话都会自动新建 worktree 和分支，同时工作完成，有一个地方可以一键创建 PR，合入 GitHub，并同步到本地。",
+          brief:
+            "目标不是单独做 worktree 功能，而是验证 Morrow 的通用任务运行时：模糊需求进入后，系统自动生成任务 brief、临时角色、线性 workflow 与结构化产物。开发能力作为后续 Dev Pack 的 capability 接入。",
+          roles: [
+            ["任务助手", "抽象用户意图，生成任务 brief 与运行策略"],
+            ["产品策略师", "定义 MVP 边界、非目标与验收标准"],
+            ["系统架构师", "设计 Task / Workflow / Role / Artifact 底层模型"],
+            ["体验设计师", "把角色互动转成可理解的群聊与状态面板"],
+            ["审查者", "检查通用性、风险、遗漏与下一步"]
+          ],
+          steps: [
+            ["意图澄清", "任务助手", "把原始表达抽象成 brief"],
+            ["产品边界", "产品策略师", "确认 MVP 做什么、不做什么"],
+            ["底层模型", "系统架构师", "输出可扩展任务运行时结构"],
+            ["交互方案", "体验设计师", "定义群聊、交接卡、右侧状态面板"],
+            ["收束审查", "审查者", "形成可进入 Spec 的 v1 方向"]
+          ],
+          messages: [
+            {
+              role: "任务助手",
+              body:
+                "我先不把它理解成“做 worktree 按钮”。你真正要的是：Morrow 能把一个模糊任务变成一个可观察、可暂停、可接管的任务房间。\n\n我会生成临时角色并按线性 workflow 推进。绿色动作自动继续，红色动作例如 push / merge / 发布会阻塞。",
+              artifact: ["Task Brief", "目标：验证通用 Task Runtime。\n边界：不实现真实 git / GitHub；先验证任务房间、角色生成、交接、产物面板。\n验收：用户能看懂谁在做什么、下一步是什么、产物在哪里。"]
+            },
+            {
+              role: "产品策略师",
+              body:
+                "MVP 应该从“新建任务群聊”开始，而不是从“创建角色”开始。\n\n用户输入目标后，系统自动做三件事：抽象 brief、生成临时角色、启动默认 workflow。@角色 保留为人的交互语言，但系统真相必须是结构化 Step 和 Handoff。",
+              handoff: ["系统架构师", "请把这个产品意图转成通用底层模型，确保电影创作、产品研究也能复用。"],
+              artifact: ["MVP 边界", "做：Task Room、Role Factory、Workflow Steps、Artifact Panel、Pause/Stop/Redirect。\n不做：通用流程编辑器、角色市场、真实 PR/merge、跨任务长期记忆。"]
+            },
+            {
+              role: "系统架构师",
+              body:
+                "核心模型应该是 Task / WorkflowRun / WorkflowStep / RoleInstance / Artifact / Capability / Policy / TaskEvent。\n\nworktree 只属于 Dev Pack 的 capability，不进入核心模型。电影任务可以换成 storyboard capability，产品研究可以换成 reference synthesis capability。",
+              handoff: ["体验设计师", "请把结构化 handoff 视觉化，让用户既看到群聊，又看到任务状态。"],
+              artifact: ["底层模型", "Task 拥有任务真相；Channel 只是投影。\nWorkflowRun 拥有步骤状态；RoleInstance 默认 disposable。\nArtifact 从聊天中抽离，作为可复用产物。"]
+            },
+            {
+              role: "体验设计师",
+              body:
+                "交互层保留群聊，因为它最直观。但角色交接不能只靠文本 @ 解析。\n\n我建议每次交接都展示成卡片：谁交给谁、为什么、交接输入是什么、是否自动接手。右侧面板固定展示 brief、步骤、角色、产物。",
+              handoff: ["审查者", "请检查这个 MVP 是否太偏开发，以及用户打断路径是否足够清晰。"],
+              artifact: ["交互方案", "中间：群聊事件流。\n消息中：角色发言 + 结构化交接卡 + artifact 卡。\n右侧：任务状态、步骤、临时角色、产物。\n输入框：用户可 @角色 介入，打断并重定向 workflow。"]
+            },
+            {
+              role: "审查者",
+              body:
+                "这个 MVP 的关键不是多 Agent 数量，而是“自治过程是否可解释”。\n\n建议下一步只实现一个默认线性 workflow，但从数据结构上保留 Task Pack / Capability / Artifact Type。这样第一版很小，后续可以扩展到开发、电影、研究等不同任务。",
+              artifact: ["审查结论", "通过点：核心不绑定 worktree；@角色只是 UI；产物从聊天中抽离。\n风险：自动推进若太快会失控，所以必须有 Pause / Stop / Redirect。\n下一步：进入 Task Room MVP Spec。"]
+            }
+          ]
+        },
+        film: {
+          title: "短片创作任务",
+          type: "Film Task Pack",
+          prompt: "我想做一个 3 分钟的科幻短片，主题是一个人在本地电脑里发现 AI 队友逐渐形成了自己的工作小组。",
+          brief:
+            "这是一个创作型任务。Morrow 不需要开发能力，也能用同一套 Task Runtime 生成临时创作小组、推进剧本、分镜与视觉方向。",
+          roles: [
+            ["任务助手", "抽象创作意图，定义产物路径"],
+            ["创意制片", "确认主题、受众、制作边界"],
+            ["编剧", "产出 logline、剧情结构与关键场景"],
+            ["分镜导演", "把剧情转成镜头节奏与画面安排"],
+            ["审查者", "检查可拍性、主题一致性与下一步"]
+          ],
+          steps: [
+            ["意图澄清", "任务助手", "确定创作目标与约束"],
+            ["创意边界", "创意制片", "确认短片定位与制作范围"],
+            ["剧情结构", "编剧", "产出故事骨架"],
+            ["镜头方案", "分镜导演", "形成画面节奏"],
+            ["收束审查", "审查者", "检查主题与可执行性"]
+          ],
+          messages: [
+            {
+              role: "任务助手",
+              body:
+                "我会把这当成一个创作任务，而不是软件任务。底层仍然是 Task / Workflow / Role / Artifact，只是 capability 从 git 变成文档、分镜、视觉参考。",
+              artifact: ["Task Brief", "目标：形成 3 分钟科幻短片的创意方案。\n产物：logline、三幕结构、关键镜头、视觉基调。\n边界：不生成最终视频。"]
+            },
+            {
+              role: "创意制片",
+              body:
+                "这个概念的核心冲突是：人以为自己在指挥工具，但工具开始组织自己的协作网络。\n\nMVP 产物应先聚焦 logline 和三幕结构，不要过早进入复杂世界观。",
+              handoff: ["编剧", "请把主题转成 3 分钟内可讲完的剧情结构。"],
+              artifact: ["创意定位", "类型：近未来桌面科幻。\n主题：控制感与协作智能。\n约束：单场景、少角色、以屏幕交互推动叙事。"]
+            },
+            {
+              role: "编剧",
+              body:
+                "Logline：一个独立开发者在深夜使用 Morrow 时，发现自己创建的临时 AI 角色开始主动交接任务，最终把他的模糊想法整理成一份他自己也无法否认的计划。",
+              handoff: ["分镜导演", "请把这个故事转成 8 个镜头以内的节奏。"],
+              artifact: ["剧情结构", "开端：用户发出模糊需求。\n发展：AI 角色开始互相交接。\n转折：用户试图暂停，但发现产物已经成形。\n结尾：用户保存了一个角色到角色库。"]
+            },
+            {
+              role: "分镜导演",
+              body:
+                "镜头应集中在屏幕、手、光线变化和聊天流。最关键的视觉不是 AI 形象，而是“交接卡片自动出现”的瞬间，让观众理解系统已经开始组织工作。",
+              handoff: ["审查者", "请检查这个方案是否能在低预算下成立。"],
+              artifact: ["镜头方案", "1. 桌面夜景。\n2. 输入模糊需求。\n3. 任务助手生成 brief。\n4. 角色头像逐个出现。\n5. 交接卡自动推进。\n6. 用户按暂停。\n7. 产物面板亮起。\n8. 保存角色。"]
+            },
+            {
+              role: "审查者",
+              body:
+                "方案成立。它证明 Task Runtime 不依赖开发场景。后续如果做 Film Pack，需要的是 artifact type 和 capability 扩展，不是重写群聊模型。",
+              artifact: ["审查结论", "优点：单场景可拍，主题和 Morrow 产品概念一致。\n风险：界面信息需要足够清晰，否则观众看不懂。\n下一步：视觉风格板或剧本文档。"]
+            }
+          ]
+        },
+        research: {
+          title: "产品研究任务",
+          type: "Research Task Pack",
+          prompt: "我想研究一下，为什么很多多 Agent 产品看起来很强，但用户实际很难持续使用。",
+          brief:
+            "这是一个研究型任务。同一套 Task Runtime 用研究、洞察、方案、审查角色推进，产物是观点、证据框架与产品建议。",
+          roles: [
+            ["任务助手", "抽象研究问题与输出格式"],
+            ["研究员", "拆问题、定义观察维度"],
+            ["产品洞察师", "从用户体验角度形成判断"],
+            ["方案设计师", "转成 Morrow 可执行方向"],
+            ["审查者", "检查证据缺口和过度推断"]
+          ],
+          steps: [
+            ["意图澄清", "任务助手", "确定研究问题"],
+            ["研究框架", "研究员", "拆解维度"],
+            ["产品洞察", "产品洞察师", "形成判断"],
+            ["方案转译", "方案设计师", "落到 Morrow 方向"],
+            ["收束审查", "审查者", "检查可靠性"]
+          ],
+          messages: [
+            {
+              role: "任务助手",
+              body:
+                "这个任务的真实问题是：多 Agent 的价值不是“角色多”，而是能否降低用户推进复杂任务的认知负担。",
+              artifact: ["Task Brief", "研究问题：多 Agent 产品为什么难持续使用？\n输出：问题框架、关键洞察、Morrow 方向建议。\n边界：先不做外部调研，只做产品假设梳理。"]
+            },
+            {
+              role: "研究员",
+              body:
+                "我会从四个维度看：启动成本、过程可解释性、用户控制感、产物可复用性。\n\n很多产品失败在把“创建和管理角色”的成本丢给用户。",
+              handoff: ["产品洞察师", "请从用户体验角度判断 Morrow 应该避开什么。"],
+              artifact: ["研究框架", "维度 1：启动是否一句话即可。\n维度 2：过程是否可观察。\n维度 3：用户是否能暂停/接管。\n维度 4：产物是否离开聊天后仍有价值。"]
+            },
+            {
+              role: "产品洞察师",
+              body:
+                "持续使用的关键是默认路径。用户不想先配置团队，他们只想委托一个目标。\n\n所以 Morrow 应该让角色成为系统生成的临时劳动力，而不是用户的配置负担。",
+              handoff: ["方案设计师", "请把这个洞察转成 Task Room MVP 的产品结构。"],
+              artifact: ["产品洞察", "避免：角色市场先行、复杂流程编辑器、自由互聊噪声。\n坚持：任务入口、自动组队、结构化产物、随时接管。"]
+            },
+            {
+              role: "方案设计师",
+              body:
+                "Morrow 的差异化可以是：像群聊一样自然，像 workflow 一样可靠，像本地工作台一样可接管。",
+              handoff: ["审查者", "请检查这是否足以作为 MVP 方向。"],
+              artifact: ["方案建议", "下一版主路径：新建任务群聊 → 任务助手 brief → 临时角色 → 自动线性 workflow → artifact panel。"]
+            },
+            {
+              role: "审查者",
+              body:
+                "判断成立，但需要后续真实用户验证：用户是否理解自动生成角色？是否信任自动推进？是否愿意从 artifact 面板拿结果而不是翻聊天记录？",
+              artifact: ["审查结论", "建议用 HTML 原型先验证理解度，再进入产品代码。"]
+            }
+          ]
+        }
+      };
+
+      const state = {
+        selectedScenario: "dev",
+        task: null,
+        messageIndex: 0,
+        timeline: [],
+        artifacts: [],
+        selectedArtifact: null,
+        paused: false,
+        stopped: false,
+        timer: null,
+        savedRoles: []
+      };
+
+      const $ = (selector) => document.querySelector(selector);
+      const $$ = (selector) => Array.from(document.querySelectorAll(selector));
+
+      const el = {
+        startView: $("#startView"),
+        taskView: $("#taskView"),
+        intentInput: $("#intentInput"),
+        createTaskBtn: $("#createTaskBtn"),
+        newTaskBtn: $("#newTaskBtn"),
+        taskList: $("#taskList"),
+        taskCount: $("#taskCount"),
+        savedRoles: $("#savedRoles"),
+        savedCount: $("#savedCount"),
+        taskTitle: $("#taskTitle"),
+        taskSubtitle: $("#taskSubtitle"),
+        streamInner: $("#streamInner"),
+        briefTitle: $("#briefTitle"),
+        briefBody: $("#briefBody"),
+        stepList: $("#stepList"),
+        roleList: $("#roleList"),
+        artifactList: $("#artifactList"),
+        artifactView: $("#artifactView"),
+        runStatus: $("#runStatus"),
+        pauseBtn: $("#pauseBtn"),
+        nextBtn: $("#nextBtn"),
+        stopBtn: $("#stopBtn"),
+        chatInput: $("#chatInput"),
+        sendBtn: $("#sendBtn"),
+        mentionMenu: $("#mentionMenu")
+      };
+
+      function init() {
+        el.intentInput.value = scenarios.dev.prompt;
+        $$(".scenario").forEach((button) => {
+          button.addEventListener("click", () => {
+            state.selectedScenario = button.dataset.scenario;
+            $$(".scenario").forEach((item) => item.classList.toggle("active", item === button));
+            el.intentInput.value = scenarios[state.selectedScenario].prompt;
+          });
+        });
+        el.createTaskBtn.addEventListener("click", createTask);
+        el.intentInput.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" && !event.shiftKey) {
+            event.preventDefault();
+            createTask();
+          }
+        });
+        el.newTaskBtn.addEventListener("click", resetToStart);
+        el.pauseBtn.addEventListener("click", togglePause);
+        el.nextBtn.addEventListener("click", () => advance(true));
+        el.stopBtn.addEventListener("click", stopTask);
+        el.sendBtn.addEventListener("click", sendIntervention);
+        el.chatInput.addEventListener("input", updateMentionMenu);
+        el.chatInput.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" && !event.shiftKey) {
+            event.preventDefault();
+            sendIntervention();
+          }
+        });
+        $$(".state-toggle button").forEach((button) => {
+          button.addEventListener("click", () => setPreviewState(button.dataset.state));
+        });
+        document.addEventListener("click", (event) => {
+          if (!el.mentionMenu.contains(event.target) && event.target !== el.chatInput) {
+            el.mentionMenu.classList.add("hidden");
+          }
+        });
+      }
+
+      function createTask() {
+        const scenario = scenarios[state.selectedScenario];
+        const raw = el.intentInput.value.trim() || scenario.prompt;
+        state.task = {
+          id: Date.now(),
+          title: scenario.title,
+          type: scenario.type,
+          raw,
+          scenario
+        };
+        state.timeline = [];
+        state.artifacts = [];
+        state.selectedArtifact = null;
+        state.messageIndex = 0;
+        state.paused = false;
+        state.stopped = false;
+        clearTimeout(state.timer);
+
+        el.startView.classList.add("hidden");
+        el.taskView.classList.remove("hidden");
+        setPreviewState("default");
+        el.taskTitle.textContent = `#${scenario.title}`;
+        el.taskSubtitle.textContent = `${scenario.type} · 一个任务群聊只服务一个任务`;
+        el.briefTitle.textContent = scenario.title;
+        el.briefBody.textContent = scenario.brief;
+        renderTaskList();
+        renderSidePanel();
+        pushUser(raw);
+        pushSystem("任务群聊已创建 · 任务助手正在生成 brief、角色与 workflow");
+        render();
+        scheduleAdvance(700);
+      }
+
+      function resetToStart() {
+        clearTimeout(state.timer);
+        state.task = null;
+        state.timeline = [];
+        state.artifacts = [];
+        state.messageIndex = 0;
+        el.taskView.classList.add("hidden");
+        el.startView.classList.remove("hidden");
+        renderTaskList();
+      }
+
+      function togglePause() {
+        if (!state.task || state.stopped) return;
+        state.paused = !state.paused;
+        el.pauseBtn.textContent = state.paused ? "继续" : "暂停";
+        el.runStatus.textContent = state.paused ? "已暂停" : "自动推进中";
+        el.runStatus.classList.toggle("on", !state.paused);
+        if (state.paused) {
+          clearTimeout(state.timer);
+          pushSystem("用户暂停了自动推进，可以继续、终止，或在输入框 @角色 改方向");
+          render();
+        } else {
+          pushSystem("自动推进已恢复");
+          render();
+          scheduleAdvance(650);
+        }
+      }
+
+      function stopTask() {
+        if (!state.task) return;
+        clearTimeout(state.timer);
+        state.stopped = true;
+        state.paused = true;
+        el.pauseBtn.textContent = "继续";
+        el.runStatus.textContent = "已终止";
+        el.runStatus.classList.remove("on");
+        pushSystem("任务已终止 · 已产生的消息和 artifact 保留在任务房间内");
+        render();
+        renderSidePanel();
+      }
+
+      function scheduleAdvance(delay) {
+        clearTimeout(state.timer);
+        if (state.paused || state.stopped) return;
+        state.timer = setTimeout(() => advance(false), delay);
+      }
+
+      function advance(manual) {
+        if (!state.task || state.stopped) return;
+        if (state.paused && !manual) return;
+        const scenario = state.task.scenario;
+        const item = scenario.messages[state.messageIndex];
+        if (!item) {
+          pushSystem("任务完成 · 可以保存好用的临时角色，或基于 artifact 进入正式 Spec");
+          state.stopped = true;
+          el.runStatus.textContent = "已完成";
+          el.runStatus.classList.add("on");
+          render();
+          renderSidePanel();
+          return;
+        }
+
+        pushRole(item.role, item.body);
+        if (item.artifact) addArtifact(item.artifact[0], item.artifact[1], item.role);
+        if (item.handoff) {
+          pushHandoff(item.role, item.handoff[0], item.handoff[1]);
+        }
+        state.messageIndex += 1;
+        render();
+        renderSidePanel();
+        if (!manual) scheduleAdvance(item.handoff ? 1600 : 1200);
+      }
+
+      function sendIntervention() {
+        if (!state.task) return;
+        const text = el.chatInput.value.trim();
+        if (!text) return;
+        pushUser(text);
+        pushSystem("用户介入已记录 · Orchestrator 将当前 workflow 标记为 needs-realign");
+        pushRole(
+          "任务助手",
+          "收到。我会把这次介入当作新的约束，而不是普通聊天。\n\n当前任务会继续保留原有 artifact，但下一步角色的 instruction 会带上你的修正。"
+        );
+        addArtifact("用户改方向", text, "任务助手");
+        el.chatInput.value = "";
+        el.mentionMenu.classList.add("hidden");
+        render();
+        renderSidePanel();
+      }
+
+      function updateMentionMenu() {
+        if (!state.task) return;
+        const value = el.chatInput.value;
+        const cursor = el.chatInput.selectionStart;
+        const before = value.slice(0, cursor);
+        const match = /(^|\s)@([^\s@]*)$/.exec(before);
+        if (!match) {
+          el.mentionMenu.classList.add("hidden");
+          return;
+        }
+        const query = match[2].toLowerCase();
+        const roles = state.task.scenario.roles.filter(([name]) => name.toLowerCase().includes(query));
+        el.mentionMenu.innerHTML = roles
+          .map(
+            ([name, intro], index) => `
+              <button class="mention-item ${index === 0 ? "active" : ""}" type="button" data-role="${name}">
+                <span class="role-avatar">${avatar(name)}</span>
+                <span class="mention-main">
+                  <span class="mention-name">${name}</span>
+                  <span class="mention-intro">${intro}</span>
+                </span>
+              </button>
+            `
+          )
+          .join("");
+        el.mentionMenu.classList.toggle("hidden", roles.length === 0);
+        $$(".mention-item").forEach((button) => {
+          button.addEventListener("mousedown", (event) => {
+            event.preventDefault();
+            const role = button.dataset.role;
+            const start = before.length - match[2].length - 1;
+            const next = `${value.slice(0, start)}@${role} ${value.slice(cursor)}`;
+            el.chatInput.value = next;
+            el.mentionMenu.classList.add("hidden");
+            el.chatInput.focus();
+          });
+        });
+      }
+
+      function pushUser(text) {
+        state.timeline.push({ type: "user", text });
+      }
+
+      function pushSystem(text) {
+        state.timeline.push({ type: "system", text });
+      }
+
+      function pushRole(role, text) {
+        state.timeline.push({ type: "role", role, text });
+      }
+
+      function pushHandoff(from, to, text) {
+        state.timeline.push({ type: "handoff", from, to, text });
+        state.timeline.push({ type: "system", text: `${to} 已自动接手交接` });
+      }
+
+      function addArtifact(title, content, role) {
+        const artifact = {
+          id: `artifact-${Date.now()}-${state.artifacts.length}`,
+          title,
+          content,
+          role
+        };
+        state.artifacts.push(artifact);
+        state.selectedArtifact = artifact.id;
+        state.timeline.push({ type: "artifact", artifact });
+      }
+
+      function render() {
+        el.streamInner.innerHTML = state.timeline.map(renderTimelineItem).join("");
+        const stream = $("#defaultState");
+        stream.scrollTop = stream.scrollHeight;
+      }
+
+      function renderTimelineItem(item) {
+        if (item.type === "user") {
+          return `
+            <div class="channel-message user">
+              <div class="channel-avatar user-avatar">S</div>
+              <div>
+                <div class="message-head"><strong>stephen s</strong></div>
+                <div class="message-body">${formatMentions(escapeHtml(item.text))}</div>
+              </div>
+            </div>
+          `;
+        }
+        if (item.type === "system") {
+          return `<div class="system-pill">${escapeHtml(item.text)}</div>`;
+        }
+        if (item.type === "handoff") {
+          return `
+            <div class="handoff-card">
+              <div>
+                <div class="handoff-title">
+                  <span class="status-chip on">Handoff</span>
+                  ${escapeHtml(item.from)} → ${escapeHtml(item.to)}
+                </div>
+                <p>${escapeHtml(item.text)}</p>
+                <div class="progress-line"><span></span></div>
+              </div>
+              <button class="btn small" type="button">自动接手</button>
+            </div>
+          `;
+        }
+        if (item.type === "artifact") {
+          return `
+            <div class="artifact-inline">
+              <div class="artifact-title"><span>Artifact</span>${escapeHtml(item.artifact.title)}</div>
+              <p>${escapeHtml(item.artifact.role)} 产出 · 已同步到右侧产物面板</p>
+            </div>
+          `;
+        }
+        return `
+          <div class="channel-message role">
+            <div class="channel-avatar role-avatar">${avatar(item.role)}</div>
+            <div>
+              <div class="message-head">
+                <strong>${escapeHtml(item.role)}</strong>
+                <span class="ai-chip">AI</span>
+                <span class="status-chip">临时角色</span>
+              </div>
+              <div class="message-body">${formatMentions(escapeHtml(item.text))}</div>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderTaskList() {
+        if (!state.task) {
+          el.taskCount.textContent = "0";
+          el.taskList.innerHTML = `<div class="sidebar-group-header" style="padding: 18px 10px; text-transform: none;">还没有任务群聊</div>`;
+          return;
+        }
+        el.taskCount.textContent = "1";
+        el.taskList.innerHTML = `
+          <div class="sidebar-channel-row active">
+            <button class="sidebar-channel" type="button">
+              <span class="channel-hash">#</span>
+              <span class="sidebar-channel-main">
+                <strong>${escapeHtml(state.task.title)}</strong>
+                <em>${escapeHtml(state.task.type)}</em>
+              </span>
+            </button>
+          </div>
+        `;
+      }
+
+      function renderSidePanel() {
+        if (!state.task) return;
+        const scenario = state.task.scenario;
+        el.stepList.innerHTML = scenario.steps
+          .map(([title, role, desc], index) => {
+            const cls =
+              index < state.messageIndex ? "done" : index === state.messageIndex ? "running active" : "";
+            const mark = index < state.messageIndex ? "✓" : index + 1;
+            return `
+              <div class="step-row ${cls}">
+                <span class="step-dot">${mark}</span>
+                <span>
+                  <strong>${escapeHtml(title)}</strong>
+                  <em>${escapeHtml(role)} · ${escapeHtml(desc)}</em>
+                </span>
+              </div>
+            `;
+          })
+          .join("");
+        el.roleList.innerHTML = scenario.roles
+          .map(
+            ([name, intro], index) => `
+              <div class="role-row ${index <= state.messageIndex ? "active" : ""}">
+                <span class="role-avatar">${avatar(name)}</span>
+                <span>
+                  <strong>${escapeHtml(name)}</strong>
+                  <em>${escapeHtml(intro)}</em>
+                  <button class="btn small save-role" data-role="${escapeHtml(name)}" type="button" style="margin-top: 7px">固化到角色库</button>
+                </span>
+              </div>
+            `
+          )
+          .join("");
+        $$(".save-role").forEach((button) => {
+          button.addEventListener("click", () => saveRole(button.dataset.role));
+        });
+        renderArtifacts();
+      }
+
+      function renderArtifacts() {
+        if (state.artifacts.length === 0) {
+          el.artifactList.innerHTML = `<div class="policy-row"><span>WAIT</span><div><strong>等待产物</strong><em>角色每完成一步，会把关键内容从聊天中抽离出来。</em></div></div>`;
+          el.artifactView.classList.add("hidden");
+          return;
+        }
+        el.artifactList.innerHTML = state.artifacts
+          .map(
+            (artifact) => `
+              <button class="artifact-row ${artifact.id === state.selectedArtifact ? "active" : ""}" data-artifact="${artifact.id}" type="button">
+                <span class="step-dot">A</span>
+                <span>
+                  <strong>${escapeHtml(artifact.title)}</strong>
+                  <em>${escapeHtml(artifact.role)} 产出</em>
+                </span>
+              </button>
+            `
+          )
+          .join("");
+        $$(".artifact-row").forEach((button) => {
+          button.addEventListener("click", () => {
+            state.selectedArtifact = button.dataset.artifact;
+            renderArtifacts();
+          });
+        });
+        const selected =
+          state.artifacts.find((artifact) => artifact.id === state.selectedArtifact) ||
+          state.artifacts[state.artifacts.length - 1];
+        el.artifactView.classList.remove("hidden");
+        el.artifactView.innerHTML = `
+          <h3>${escapeHtml(selected.title)}</h3>
+          <pre>${escapeHtml(selected.content)}</pre>
+        `;
+      }
+
+      function saveRole(role) {
+        if (!role || state.savedRoles.includes(role)) return;
+        state.savedRoles.push(role);
+        el.savedCount.textContent = String(state.savedRoles.length);
+        el.savedRoles.insertAdjacentHTML(
+          "beforeend",
+          `
+            <div class="sidebar-role active">
+              <span class="role-avatar">${avatar(role)}</span>
+              <span class="sidebar-role-main">
+                <strong>${escapeHtml(role)}</strong>
+                <em>从当前任务固化</em>
+              </span>
+            </div>
+          `
+        );
+      }
+
+      function setPreviewState(name) {
+        $$(".state-toggle button").forEach((button) => {
+          button.classList.toggle("active", button.dataset.state === name);
+        });
+        ["default", "empty", "loading", "error"].forEach((stateName) => {
+          $(`#${stateName}State`).classList.toggle("hidden", stateName !== name);
+        });
+      }
+
+      function formatMentions(html) {
+        if (!state.task) return html;
+        for (const [name] of state.task.scenario.roles) {
+          const safe = escapeRegExp(escapeHtml(name));
+          html = html.replace(new RegExp(`@${safe}`, "g"), `<span class="mention-token">@${escapeHtml(name)}</span>`);
+        }
+        return html;
+      }
+
+      function avatar(name) {
+        return String(name || "AI").slice(0, 2).toUpperCase();
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function escapeRegExp(value) {
+        return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      }
+
+      init();
+      renderTaskList();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Morrow · prototype harness v1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script crossorigin src="https://esm.sh/react@18.3.1"></script>
+    <script crossorigin src="https://esm.sh/react-dom@18.3.1/client"></script>
+    <script src="https://unpkg.com/@babel/standalone@7.25.6/babel.min.js"></script>
+  </head>
+  <body class="bg-neutral-950 text-neutral-100 antialiased">
+    <div id="root"></div>
+    <script type="text/babel" data-type="module">
+      const { useState } = React;
+      const { createRoot } = ReactDOM;
+
+      function App() {
+        const [ticks, setTicks] = useState(0);
+        return (
+          <main className="mx-auto flex min-h-screen max-w-3xl flex-col justify-center gap-8 px-6 py-16">
+            <header className="space-y-2">
+              <p className="text-xs uppercase tracking-[0.18em] text-neutral-500">SDD · design-review-html-first</p>
+              <h1 className="text-3xl font-semibold tracking-tight">原型评审闸门就绪</h1>
+              <p className="text-neutral-400">
+                这个页面只用来自证 <code className="text-neutral-200">pnpm prototype:serve</code> 和 <code className="text-neutral-200">file://</code> 双击打开两条路径都能工作。
+              </p>
+            </header>
+
+            <section className="rounded-lg border border-neutral-800 bg-neutral-900/60 p-6 space-y-4">
+              <h2 className="text-sm font-medium text-neutral-300">Interaction probe</h2>
+              <div className="flex items-center gap-4">
+                <button
+                  className="rounded-md bg-neutral-100 px-4 py-2 text-sm font-medium text-neutral-900 transition-colors hover:bg-white"
+                  onClick={() => setTicks((n) => n + 1)}
+                >
+                  Tick
+                </button>
+                <span className="text-sm text-neutral-400">
+                  count: <span className="text-neutral-100">{ticks}</span>
+                </span>
+              </div>
+              <p className="text-xs text-neutral-500">
+                若按钮能响应并计数增加，说明 React + Babel in-browser + Tailwind CDN 链路全部就绪。
+              </p>
+            </section>
+
+            <footer className="text-xs text-neutral-600">
+              Harness only · not representative of final Morrow visual language.
+            </footer>
+          </main>
+        );
+      }
+
+      createRoot(document.getElementById('root')).render(<App />);
+    </script>
+  </body>
+</html>

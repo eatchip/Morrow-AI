@@ -1,0 +1,114 @@
+{
+  "name": "morrow",
+  "private": false,
+  "version": "1.0.0",
+  "description": "A local AI workspace for personal chats, group channels, and Claude Code / Codex teammates.",
+  "author": "songhuiyu",
+  "homepage": "https://github.com/eatchip/Morrow",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eatchip/Morrow.git"
+  },
+  "main": "./out/main/index.js",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.12.0",
+    "pnpm": ">=9.6.0"
+  },
+  "packageManager": "pnpm@9.6.0",
+  "scripts": {
+    "predev": "node scripts/prepare-node-pty.mjs",
+    "dev": "electron-vite dev",
+    "prebuild": "node scripts/prepare-node-pty.mjs",
+    "build": "electron-vite build",
+    "predist": "node scripts/prepare-node-pty.mjs",
+    "dist": "electron-vite build && electron-builder",
+    "predist:mac": "node scripts/prepare-node-pty.mjs",
+    "dist:mac": "electron-vite build && electron-builder --mac",
+    "preview": "electron-vite preview",
+    "postinstall": "node scripts/prepare-node-pty.mjs && electron-builder install-app-deps && node scripts/prepare-node-pty.mjs",
+    "check": "tsc -b tsconfig.node.json tsconfig.web.json --noEmit",
+    "lint": "oxlint .",
+    "lint:fix": "oxlint --fix .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "format-check:staged": "node scripts/check-format-staged.mjs",
+    "brand-check": "node scripts/check-brand.mjs",
+    "line-check:staged": "node scripts/check-max-lines.mjs",
+    "secret-check:staged": "node scripts/check-secrets-staged.mjs",
+    "secrets:scan": "secretlint \"**/*\"",
+    "naming-check:staged": "node scripts/check-naming-staged.mjs",
+    "test": "vitest",
+    "test:staged": "node scripts/run-vitest-related-staged.mjs",
+    "test:e2e": "node scripts/test-e2e-with-window-fallback.mjs",
+    "test:e2e:pre-commit": "node scripts/run-precommit-e2e.mjs",
+    "perf:codex": "node scripts/run-codex-parity-benchmark.mjs",
+    "perf:codex:real": "node scripts/run-codex-parity-benchmark.mjs --real",
+    "prototype:serve": "node scripts/serve-prototype.mjs",
+    "pre-commit": "pnpm line-check:staged && pnpm secret-check:staged && pnpm naming-check:staged && pnpm lint:fix && pnpm format-check:staged && pnpm check && pnpm test:staged && pnpm test:e2e:pre-commit",
+    "prepare": "husky"
+  },
+  "dependencies": {
+    "@electron-toolkit/preload": "^3.0.1",
+    "@electron-toolkit/utils": "^3.0.0",
+    "@xterm/addon-fit": "^0.11.0",
+    "@xterm/xterm": "^6.0.0",
+    "node-pty": "^1.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@electron-toolkit/tsconfig": "^1.0.1",
+    "@playwright/test": "^1.58.2",
+    "@secretlint/secretlint-rule-preset-recommend": "^11.3.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/node": "^22.19.15",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "@vitest/coverage-v8": "^4.1.0",
+    "electron": "^36.9.2",
+    "electron-builder": "^26.8.1",
+    "electron-vite": "^5.0.0",
+    "happy-dom": "^20.8.4",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
+    "oxlint": "^1.55.0",
+    "prettier": "^3.8.1",
+    "secretlint": "^11.3.1",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.3",
+    "vitest": "^4.1.0"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}": [
+      "node scripts/check-max-lines.mjs",
+      "oxlint --fix",
+      "prettier --write"
+    ],
+    "*.{css,scss,less,html,json,md,yaml,yml}": [
+      "node scripts/check-max-lines.mjs",
+      "prettier --write"
+    ],
+    "*.{js,jsx,ts,tsx,mjs,cjs,mts,cts,css,scss,less,html,json,md,yaml,yml,env,sh,txt}": [
+      "node scripts/check-secrets-staged.mjs"
+    ]
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "electron",
+      "node-pty"
+    ],
+    "overrides": {
+      "ajv@6.12.6": "6.14.0",
+      "ajv@8.17.1": "8.18.0",
+      "esbuild@0.18.20": "0.25.12",
+      "minimatch@3.1.2": "3.1.4",
+      "minimatch@5.1.6": "5.1.8",
+      "minimatch@9.0.5": "9.0.7",
+      "minimatch@10.1.2": "10.2.3"
+    }
+  }
+}

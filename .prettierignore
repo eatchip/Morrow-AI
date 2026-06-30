@@ -1,0 +1,21 @@
+node_modules/
+out/
+out-tsc/
+dist/
+coverage/
+playwright-report/
+test-results/
+pnpm-lock.yaml
+*.min.*
+.husky/
+
+# 既有 harness 文档由作者维护格式，不纳入 prettier 强制
+CHANGELOG.md
+README.md
+AGENTS.md
+CLAUDE.md
+DEVELOPMENT.md
+CONTRIBUTING.md
+docs/
+.comate/specs/
+.github/

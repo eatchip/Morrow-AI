@@ -1,0 +1,30 @@
+{
+  "extends": "@electron-toolkit/tsconfig/tsconfig.node.json",
+  "compilerOptions": {
+    "composite": true,
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "allowImportingTsExtensions": false,
+    "noUncheckedIndexedAccess": true,
+    "types": ["node"],
+    "outDir": "out-tsc/node"
+  },
+  "include": [
+    "src/app/main/**/*.ts",
+    "src/app/preload/**/*.ts",
+    "src/app/preload/**/*.d.ts",
+    "src/contexts/**/*.ts",
+    "src/shared/**/*.ts",
+    "electron.vite.config.ts",
+    "vitest.config.ts",
+    "playwright.config.ts",
+    "scripts/**/*.mjs",
+    "tests/contract/**/*.ts",
+    "tests/integration/**/*.ts"
+  ]
+}

@@ -1,0 +1,5 @@
+# Ensure Node 22 (ADR 0004) + corepack pnpm are reachable in git's stripped PATH.
+# Order: user-local Node install → common Homebrew locations → existing PATH.
+export PATH="$HOME/.local/share/node-versions/v22.22.2/bin:$HOME/.local/node/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
+
+pnpm pre-commit
